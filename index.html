@@ -587,14 +587,12 @@ $("btn-start").onclick = async () => {
   vadAnalyser.fftSize = 256;
   vadMixer.connect(vadAnalyser);
   const vadData = new Uint8Array(vadAnalyser.frequencyBinCount);
-  const vadTick = () => {
-    if (audioCtx.state === "closed") return;
+  const vadInterval = setInterval(() => {
+    if (audioCtx.state === "closed") { clearInterval(vadInterval); return; }
     vadAnalyser.getByteFrequencyData(vadData);
     vadSum += vadData.reduce((a,b)=>a+b,0) / vadData.length;
     vadSamples++;
-    requestAnimationFrame(vadTick);
-  };
-  vadTick();
+  }, 200);
 
   const startNewChunk=()=>{
     vadSum = 0; vadSamples = 0;
