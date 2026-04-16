@@ -397,6 +397,7 @@ Rules:
 - generate_image: true for combat, new locations, important NPCs, magic, dramatic plot moments
 - generate_image: false for small talk, planning, bookkeeping, silence
 - image_prompt must be in English, detailed, include relevant character appearances, setting atmosphere and art style
+- image_prompt must be DALL-E safe: avoid words like kill, blood, gore, brutal, slash, attack, weapon, sword, fight, battle, war, violent, dead, death — instead use: dramatic confrontation, heroic stance, intense struggle, dynamic scene, powerful motion, cinematic moment, fantasy encounter
 - event and description must be in the same language as the transcript
 - If transcript has no meaningful content, return null`;
 
@@ -577,11 +578,14 @@ $("btn-start").onclick = async () => {
   if (micStream) setupMeter(micStream,"meter-mic","meter-mic-val");
   if (tabStream.getAudioTracks().length) setupMeter(tabStream,"meter-tab","meter-tab-val");
   const chunkMs=parseInt($("chunk-sec").value||20)*1000;
-  // VAD — track average volume during chunk
+  // VAD — track average volume from sources directly
   let vadSum = 0, vadSamples = 0;
+  const vadMixer = audioCtx.createGain();
+  if (tabStream.getAudioTracks().length) audioCtx.createMediaStreamSource(tabStream).connect(vadMixer);
+  if (micStream) audioCtx.createMediaStreamSource(micStream).connect(vadMixer);
   const vadAnalyser = audioCtx.createAnalyser();
   vadAnalyser.fftSize = 256;
-  dest.stream.getAudioTracks().length && audioCtx.createMediaStreamSource(dest.stream).connect(vadAnalyser);
+  vadMixer.connect(vadAnalyser);
   const vadData = new Uint8Array(vadAnalyser.frequencyBinCount);
   const vadTick = () => {
     if (audioCtx.state === "closed") return;
