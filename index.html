@@ -563,8 +563,15 @@ const setupMeter = (stream, fillId, valId) => {
   audioCtx.createMediaStreamSource(stream).connect(an);
   const data=new Uint8Array(an.frequencyBinCount);
   const fill=$(fillId), val=$(valId);
-  const tick=()=>{ if(audioCtx.state==="closed")return; an.getByteFrequencyData(data); const pct=Math.min(100,Math.round(data.reduce((a,b)=>a+b,0)/data.length*2.5)); fill.style.width=pct+"%"; fill.className="meter-fill"+(pct>80?" hot":pct>45?" mid":""); val.textContent=pct+"%"; currentAudioLevel=Math.max(currentAudioLevel,pct); requestAnimationFrame(tick); };
-  tick();
+  setInterval(() => {
+    if(audioCtx.state==="closed") return;
+    an.getByteFrequencyData(data);
+    const pct=Math.min(100,Math.round(data.reduce((a,b)=>a+b,0)/data.length*2.5));
+    fill.style.width=pct+"%";
+    fill.className="meter-fill"+(pct>80?" hot":pct>45?" mid":"");
+    val.textContent=pct+"%";
+    currentAudioLevel=Math.max(currentAudioLevel,pct);
+  }, 100);
 };
 
 $("btn-start").onclick = async () => {
