@@ -119,7 +119,7 @@ button.danger:hover { background:#c0504015; }
       <label style="min-width:unset;">Чанк (сек)</label>
       <input type="text" id="chunk-sec" value="30" style="max-width:60px;" />
       <label style="min-width:unset;">VAD порог</label>
-      <input type="text" id="vad-threshold" value="4" style="max-width:60px;" title="Минимальный средний уровень громкости (0-100). Чанки тише — пропускаются." />
+      <input type="text" id="vad-threshold" value="10" style="max-width:60px;" title="Минимальный средний уровень громкости (0-100). Чанки тише — пропускаются." />
     </div>
   </div>
 
@@ -361,11 +361,14 @@ const getSessionContext = () => {
   const recentEvents = narrativeContext.events.slice(-6).map(e =>
     `[${e.type}] ${e.event}`
   ).join("\n");
+  const charArts = (s?.characters || []).filter(c => c.name && c.art).map(c => ({
+    name: c.name, art: c.art
+  }));
   return {
     world: s?.worldName || "Unknown world",
     worldDesc: s?.worldDesc || "",
     artStyle: s?.artStyle || "fantasy illustration",
-    chars, recentEvents,
+    chars, recentEvents, charArts,
   };
 };
 
@@ -457,8 +460,9 @@ Or return null if nothing significant happened.`;
     // Broadcast for viz tab (step 4)
     if (event.generate_image) {
       try {
+        const ctx2 = getSessionContext();
         const bc = new BroadcastChannel("dnd-narrative");
-        bc.postMessage({ type:"event", event });
+        bc.postMessage({ type:"event", event, charArts: ctx2.charArts });
         bc.close();
       } catch {}
     }
@@ -552,12 +556,14 @@ const sendToWhisper = async (blob, chunkNum) => {
   } catch(e) { log("Fetch error: "+e.message,"err"); dot("wh","err"); }
 };
 
+let currentAudioLevel = 0;
+
 const setupMeter = (stream, fillId, valId) => {
   const an=audioCtx.createAnalyser(); an.fftSize=256;
   audioCtx.createMediaStreamSource(stream).connect(an);
   const data=new Uint8Array(an.frequencyBinCount);
   const fill=$(fillId), val=$(valId);
-  const tick=()=>{ if(audioCtx.state==="closed")return; an.getByteFrequencyData(data); const pct=Math.min(100,Math.round(data.reduce((a,b)=>a+b,0)/data.length*2.5)); fill.style.width=pct+"%"; fill.className="meter-fill"+(pct>80?" hot":pct>45?" mid":""); val.textContent=pct+"%"; requestAnimationFrame(tick); };
+  const tick=()=>{ if(audioCtx.state==="closed")return; an.getByteFrequencyData(data); const pct=Math.min(100,Math.round(data.reduce((a,b)=>a+b,0)/data.length*2.5)); fill.style.width=pct+"%"; fill.className="meter-fill"+(pct>80?" hot":pct>45?" mid":""); val.textContent=pct+"%"; currentAudioLevel=Math.max(currentAudioLevel,pct); requestAnimationFrame(tick); };
   tick();
 };
 
@@ -578,20 +584,13 @@ $("btn-start").onclick = async () => {
   if (micStream) setupMeter(micStream,"meter-mic","meter-mic-val");
   if (tabStream.getAudioTracks().length) setupMeter(tabStream,"meter-tab","meter-tab-val");
   const chunkMs=parseInt($("chunk-sec").value||20)*1000;
-  // VAD — track average volume from sources directly
+  // VAD — uses levels from meter (already connected to sources)
   let vadSum = 0, vadSamples = 0;
-  const vadMixer = audioCtx.createGain();
-  if (tabStream.getAudioTracks().length) audioCtx.createMediaStreamSource(tabStream).connect(vadMixer);
-  if (micStream) audioCtx.createMediaStreamSource(micStream).connect(vadMixer);
-  const vadAnalyser = audioCtx.createAnalyser();
-  vadAnalyser.fftSize = 256;
-  vadMixer.connect(vadAnalyser);
-  const vadData = new Uint8Array(vadAnalyser.frequencyBinCount);
   const vadInterval = setInterval(() => {
     if (audioCtx.state === "closed") { clearInterval(vadInterval); return; }
-    vadAnalyser.getByteFrequencyData(vadData);
-    vadSum += vadData.reduce((a,b)=>a+b,0) / vadData.length;
+    vadSum += currentAudioLevel;
     vadSamples++;
+    currentAudioLevel = 0;
   }, 200);
 
   const startNewChunk=()=>{
@@ -600,7 +599,7 @@ $("btn-start").onclick = async () => {
     rec.ondataavailable=e=>{
       if(e.data?.size>500){
         const avgLevel = vadSamples > 0 ? vadSum / vadSamples : 0;
-        const threshold = parseFloat($("vad-threshold").value||4);
+        const threshold = parseFloat($("vad-threshold").value||10);
         if (avgLevel < threshold) {
           log(`Чанк пропущен — тишина (уровень: ${avgLevel.toFixed(1)})`);
           return;

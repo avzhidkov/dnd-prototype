@@ -275,7 +275,7 @@ const addToGallery = (url, eventData) => {
   showImage(idx);
 };
 
-const generateImage = async (eventData) => {
+const generateImage = async (eventData, charArts = []) => {
   const key = $("openai-key").value.trim();
   if (!key) { setStatus("Введи OpenAI ключ", "err"); return; }
 
@@ -283,17 +283,36 @@ const generateImage = async (eventData) => {
   $("spinner").classList.add("on");
 
   try {
-    const res = await fetch("/api/image", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-openai-key": key },
-      body: JSON.stringify({
-        model: "dall-e-3",
-        prompt: eventData.image_prompt,
-        n: 1,
-        size: "1792x1024",
-        quality: "standard",
-      }),
-    });
+    let res;
+
+    // Filter charArts to only those mentioned in event characters
+    const relevantArts = charArts.filter(ca =>
+      (eventData.characters || []).some(c => c.toLowerCase().includes(ca.name.toLowerCase()))
+    );
+
+    if (relevantArts.length > 0) {
+      // Use multipart with reference images → /v1/images/edits
+      const form = new FormData();
+      form.append("prompt", eventData.image_prompt);
+      for (const ca of relevantArts) {
+        // Convert base64 to blob
+        const resp = await fetch(ca.art);
+        const blob = await resp.blob();
+        form.append("image", blob, `${ca.name}.png`);
+      }
+      res = await fetch("/api/image", {
+        method: "POST",
+        headers: { "x-openai-key": key },
+        body: form,
+      });
+    } else {
+      // Text only → /v1/images/generations
+      res = await fetch("/api/image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-openai-key": key },
+        body: JSON.stringify({ prompt: eventData.image_prompt }),
+      });
+    }
 
     const data = await res.json();
     $("spinner").classList.remove("on");
@@ -303,8 +322,11 @@ const generateImage = async (eventData) => {
       return;
     }
 
-    const url = data.data?.[0]?.url;
-    if (!url) { setStatus("Нет URL в ответе", "err"); return; }
+    // gpt-image-1 returns base64, dalle-3 returns url
+    const item = data.data?.[0];
+    if (!item) { setStatus("Нет данных в ответе", "err"); return; }
+    const url = item.url || (item.b64_json ? `data:image/png;base64,${item.b64_json}` : null);
+    if (!url) { setStatus("Нет изображения в ответе", "err"); return; }
 
     addToGallery(url, eventData);
     setStatus(`✦ ${(eventData.type||"событие").toUpperCase()} — ${new Date().toLocaleTimeString("ru")}`, "live");
@@ -319,7 +341,7 @@ const bc = new BroadcastChannel("dnd-narrative");
 bc.onmessage = (e) => {
   if (e.data?.type === "event" && e.data.event?.generate_image) {
     setStatus(`Новое событие: ${e.data.event.event}`, "busy");
-    generateImage(e.data.event);
+    generateImage(e.data.event, e.data.charArts || []);
   }
 };
 
