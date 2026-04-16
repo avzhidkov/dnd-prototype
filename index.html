@@ -600,6 +600,13 @@ $("btn-start").onclick = async () => {
     currentAudioLevel = 0;
   }, 200);
 
+  // Debug — log VAD every 5 sec
+  const vadDebug = setInterval(() => {
+    if (audioCtx.state === "closed") { clearInterval(vadDebug); return; }
+    const avg = vadSamples > 0 ? (vadSum / vadSamples).toFixed(1) : "0.0";
+    log(`VAD debug — уровень: ${avg}, samples: ${vadSamples}, currentLevel: ${currentAudioLevel.toFixed(1)}`);
+  }, 5000);
+
   const startNewChunk=()=>{
     vadSum = 0; vadSamples = 0;
     const rec=new MediaRecorder(dest.stream,{mimeType:"audio/webm;codecs=opus"});
