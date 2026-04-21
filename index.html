@@ -142,13 +142,7 @@ const showSessions = async (user) => {
 };
 
 // Auth
-$("auth-btn").onclick = async () => {
-  $("auth-btn").disabled = true;
-  $("auth-msg").textContent = "Перенаправляю...";
-  const res = await sbFetch("/auth/v1/authorize?provider=google&redirect_to=" + encodeURIComponent(window.location.origin + "/"), {
-    method: "GET",
-  });
-  // Redirect to Google
+$("auth-btn").onclick = () => {
   window.location.href = `${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(window.location.origin + "/")}`;
 };
 
