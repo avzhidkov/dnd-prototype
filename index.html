@@ -149,9 +149,9 @@ $("auth-btn").onclick = async () => {
   $("auth-btn").disabled = true;
   $("auth-msg").textContent = "Отправляю...";
   $("auth-msg").className = "auth-msg";
-  const res = await sbFetch("/auth/v1/otp", {
+  const res = await sbFetch("/auth/v1/magiclink", {
     method: "POST",
-    body: JSON.stringify({ email, create_user: true }),
+    body: JSON.stringify({ email }),
   });
   $("auth-btn").disabled = false;
   if (res.ok) {
