@@ -13,10 +13,7 @@ body { font-family: monospace; background: #080808; color: #c9c9c9; min-height: 
 .nav-link { font-family:monospace; font-size:10px; letter-spacing:.08em; color:#444; text-decoration:none; padding:.3rem .7rem; border:1px solid transparent; border-radius:3px; transition:all .2s; white-space:nowrap; }
 .nav-link:hover { color:#c9c9c9; border-color:#2a2a2a; }
 .nav-link.active { color:#4caf72; border-color:#4caf7230; }
-.nav-right { display:flex; align-items:center; gap:.75rem; flex-shrink:0; }
-.key-lbl { font-size:10px; color:#333; letter-spacing:.08em; }
-.key-inp { background:#111; border:1px solid #1e1e1e; border-radius:3px; padding:.3rem .6rem; color:#888; font-family:monospace; font-size:11px; outline:none; width:180px; transition:border-color .2s; }
-.key-inp:focus { border-color:#4a8fcc; }
+
 .status-bar { display:flex; align-items:center; padding:.4rem 1.5rem; background:#0a0a0a; border-bottom:1px solid #111; flex-shrink:0; }
 .status { font-size:11px; color:#444; flex:1; }
 .status.live { color:#4caf72; }
@@ -73,10 +70,7 @@ body { font-family: monospace; background: #080808; color: #c9c9c9; min-height: 
     <a class="nav-link" href="/settings.html">Настройки</a>
     <a class="nav-link active" href="#">Визуализация</a>
   </div>
-  <div class="nav-right">
-    <span class="key-lbl">OPENAI KEY</span>
-    <input type="password" class="key-inp" id="openai-key" placeholder="sk-..." />
-  </div>
+
 </nav>
 
 <div class="status-bar">
@@ -121,10 +115,8 @@ const SESSION_NAME = localStorage.getItem("active-session-name") || "Сесси�
 
 $("session-name").textContent = SESSION_NAME;
 
-// Persist OpenAI key
-const savedKey = localStorage.getItem("openai-key");
-if (savedKey) $("openai-key").value = savedKey;
-$("openai-key").addEventListener("input", e => localStorage.setItem("openai-key", e.target.value.trim()));
+// Read OpenAI key from localStorage (set on record.html)
+const getKey = () => localStorage.getItem("openai-key") || "";
 
 // Gallery state
 const gallery = [];
@@ -208,7 +200,7 @@ const addToGallery = (url, eventData) => {
 };
 
 const generateImage = async (eventData, charArts = []) => {
-  const key = $("openai-key").value.trim();
+  const key = getKey();
   if (!key) { setStatus("Введи OpenAI ключ", "err"); return; }
   setStatus("Генерирую изображение...", "busy");
   $("spinner").classList.add("on");
