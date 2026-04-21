@@ -175,7 +175,7 @@ const accessToken = hash.get("access_token");
 if (accessToken) {
   token = accessToken;
   localStorage.setItem("sb-token", token);
-  window.history.replaceState({}, "", "/");
+  window.history.replaceState({}, "", "/app.html");
   sbFetch("/auth/v1/user").then(r => r.json()).then(showSessions);
 } else {
   checkSession();
@@ -211,7 +211,7 @@ const loadSessions = async () => {
 const openSession = (id, name) => {
   localStorage.setItem("active-session-id", id);
   localStorage.setItem("active-session-name", name);
-  window.location.href = `/record.html`;
+  window.location.href = `/index.html`;
 };
 
 const deleteSession = async (e, id) => {

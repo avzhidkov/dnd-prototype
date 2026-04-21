@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "dependencies": {
     "formidable": "^3.5.1",
-    "form-data": "^4.0.0"
+    "form-data": "^4.0.0",
+    "@supabase/supabase-js": "^2.45.0"
   }
 }

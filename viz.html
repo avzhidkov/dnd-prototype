@@ -165,6 +165,7 @@ body {
 <div class="topbar">
   <span class="topbar-brand">// DND VIZ</span>
   <span class="topbar-status" id="status">Ожидаю события из основной вкладки...</span>
+  <button onclick="clearDB().then(()=>{gallery.length=0;$('gallery').innerHTML='<div class=\"gallery-empty\" id=\"gallery-empty\">Изображений пока нет</div>';$('main-img').classList.remove('visible');$('main-overlay').classList.remove('visible');$('placeholder').style.display='';setStatus('Галерея очищена','');})" style="font-family:monospace;font-size:10px;padding:.3rem .7rem;border:1px solid #2a2a2a;background:transparent;color:#444;cursor:pointer;border-radius:3px;">Очистить галерею</button>
   <div class="key-row">
     <span class="key-lbl">OPENAI KEY</span>
     <input type="password" class="key-inp" id="openai-key" placeholder="sk-..." />
@@ -208,6 +209,38 @@ $("openai-key").addEventListener("input", e => localStorage.setItem("openai-key"
 // Gallery state
 const gallery = []; // { url, event, type, characters, time }
 let activeIndex = -1;
+
+// IndexedDB for gallery persistence
+let db;
+const DB_NAME = "dnd-gallery", DB_VER = 1, STORE = "images";
+
+const initDB = () => new Promise((resolve, reject) => {
+  const req = indexedDB.open(DB_NAME, DB_VER);
+  req.onupgradeneeded = e => e.target.result.createObjectStore(STORE, { keyPath: "id", autoIncrement: true });
+  req.onsuccess = e => { db = e.target.result; resolve(); };
+  req.onerror = reject;
+});
+
+const saveImageToDB = (item) => {
+  if (!db) return;
+  const tx = db.transaction(STORE, "readwrite");
+  tx.objectStore(STORE).add(item);
+};
+
+const loadImagesFromDB = () => new Promise((resolve) => {
+  if (!db) return resolve([]);
+  const tx = db.transaction(STORE, "readonly");
+  const req = tx.objectStore(STORE).getAll();
+  req.onsuccess = e => resolve(e.target.result || []);
+  req.onerror = () => resolve([]);
+});
+
+const clearDB = () => new Promise((resolve) => {
+  if (!db) return resolve();
+  const tx = db.transaction(STORE, "readwrite");
+  tx.objectStore(STORE).clear();
+  tx.oncomplete = resolve;
+});
 
 const setStatus = (msg, cls = "") => {
   const el = $("status");
@@ -258,18 +291,9 @@ const addToGallery = (url, eventData) => {
   };
 
   gallery.push(item);
+  saveImageToDB(item);
 
-  // Add thumb at start of gallery scroll
-  const emptyEl = $("gallery-empty");
-  if (emptyEl) emptyEl.remove();
-
-  const thumb = document.createElement("img");
-  thumb.className = "gallery-thumb";
-  thumb.src = url;
-  thumb.title = item.event;
-  const idx = gallery.length - 1;
-  thumb.onclick = () => showImage(idx);
-  $("gallery").insertBefore(thumb, $("gallery").firstChild);
+  addThumbToGallery(item, gallery.length - 1);
 
   // Show as main
   showImage(idx);
@@ -328,8 +352,26 @@ const generateImage = async (eventData, charArts = []) => {
     const url = item.url || (item.b64_json ? `data:image/png;base64,${item.b64_json}` : null);
     if (!url) { setStatus("Нет изображения в ответе", "err"); return; }
 
+    // Extract base64 if data URL
+    const b64 = url.startsWith("data:image") ? url.split(",")[1] : null;
     addToGallery(url, eventData);
     setStatus(`✦ ${(eventData.type||"событие").toUpperCase()} — ${new Date().toLocaleTimeString("ru")}`, "live");
+
+    // Save to Supabase
+    if (activeSessionId && activeToken && b64) {
+      fetch("/api/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${activeToken}` },
+        body: JSON.stringify({
+          session_id: activeSessionId,
+          type: eventData.type,
+          description: eventData.event,
+          characters: eventData.characters || [],
+          image_prompt: eventData.image_prompt || "",
+          image_b64: b64,
+        }),
+      }).catch(e => console.error("Save error:", e));
+    }
   } catch(e) {
     $("spinner").classList.remove("on");
     setStatus("Ошибка: " + e.message, "err");
@@ -338,14 +380,82 @@ const generateImage = async (eventData, charArts = []) => {
 
 // Listen for events from main tab
 const bc = new BroadcastChannel("dnd-narrative");
+let activeSessionId = null;
+let activeToken = null;
+
 bc.onmessage = (e) => {
   if (e.data?.type === "event" && e.data.event?.generate_image) {
+    if (e.data.sessionId) activeSessionId = e.data.sessionId;
+    if (e.data.token) activeToken = e.data.token;
     setStatus(`Новое событие: ${e.data.event.event}`, "busy");
     generateImage(e.data.event, e.data.charArts || []);
   }
 };
 
-setStatus("Слушаю основную вкладку...", "");
+// Load from server if session active
+const urlParams = new URLSearchParams(window.location.search);
+const sessionId = urlParams.get("session") || localStorage.getItem("active-session-id");
+const sessionToken = localStorage.getItem("sb-token");
+
+const loadServerGallery = async () => {
+  if (!sessionId || !sessionToken) {
+    // Fallback to IndexedDB
+    initDB().then(() => loadImagesFromDB().then(items => {
+      if (items.length > 0) {
+        items.forEach(item => addThumbToGallery(item));
+        showImage(gallery.length - 1);
+        setTimeout(() => setStatus("Слушаю основную вкладку...", ""), 2000);
+      } else {
+        setStatus("Слушаю основную вкладку...", "");
+      }
+    }));
+    return;
+  }
+
+  activeSessionId = sessionId;
+  activeToken = sessionToken;
+  setStatus("Загружаю историю сессии...", "busy");
+
+  try {
+    const res = await fetch(`/api/events?session_id=${sessionId}`, {
+      headers: { "Authorization": `Bearer ${sessionToken}` }
+    });
+    const events = await res.json();
+    if (Array.isArray(events) && events.length > 0) {
+      events.forEach(ev => {
+        if (ev.image_url) {
+          const item = {
+            url: ev.image_url,
+            event: ev.description || "",
+            type: ev.type || "other",
+            characters: ev.characters || [],
+            time: new Date(ev.created_at).toLocaleTimeString("ru", {hour:"2-digit",minute:"2-digit"}),
+          };
+          gallery.push(item);
+          addThumbToGallery(item, gallery.length - 1);
+        }
+      });
+      if (gallery.length > 0) {
+        showImage(gallery.length - 1);
+        setStatus(`Загружено ${gallery.length} изображений`, "live");
+        setTimeout(() => setStatus("Слушаю основную вкладку...", ""), 2000);
+        return;
+      }
+    }
+  } catch(e) { console.error("Load error:", e); }
+  setStatus("Слушаю основную вкладку...", "");
+};
+
+const addThumbToGallery = (item, idx) => {
+  const i = idx !== undefined ? idx : gallery.length - 1;
+  const emptyEl = $("gallery-empty"); if (emptyEl) emptyEl.remove();
+  const thumb = document.createElement("img");
+  thumb.className = "gallery-thumb"; thumb.src = item.url; thumb.title = item.event;
+  thumb.onclick = () => showImage(i);
+  $("gallery").insertBefore(thumb, $("gallery").firstChild);
+};
+
+loadServerGallery();
 </script>
 </body>
 </html>
