@@ -11,6 +11,10 @@ body { font-family: monospace; background: #0d0d0d; color: #c9c9c9; min-height: 
 .nav-tab { background:none; border:none; border-bottom:2px solid transparent; height:46px; padding:0 1rem; font-family:monospace; font-size:11px; letter-spacing:.1em; color:#555; cursor:pointer; transition:all .2s; }
 .nav-tab:hover { color:#999; }
 .nav-tab.active { color:#c9c9c9; border-bottom-color:#4caf72; }
+.nav-links { display:flex; align-items:center; gap:.25rem; flex-shrink:0; }
+.nav-link { font-family:monospace; font-size:10px; letter-spacing:.08em; color:#444; text-decoration:none; padding:.3rem .7rem; border:1px solid transparent; border-radius:3px; transition:all .2s; white-space:nowrap; }
+.nav-link:hover { color:#c9c9c9; border-color:#2a2a2a; }
+.nav-link.active { color:#4caf72; border-color:#4caf7230; }
 .page { display:none; padding:1.75rem 1.5rem; max-width:780px; margin:0 auto; }
 .page.active { display:block; }
 .box { background:#181818; border:1px solid #2a2a2a; border-radius:6px; padding:1.25rem 1.5rem; margin-bottom:1rem; }
@@ -102,11 +106,14 @@ button.danger:hover { background:#c0504015; }
 <body>
 
 <nav class="nav">
-  <span class="nav-brand">// DND</span>
-  <span id="session-name" style="font-size:11px;color:#4caf72;flex:1;padding-left:1rem;"></span>
-  <a href="/" style="font-family:monospace;font-size:10px;color:#444;text-decoration:none;padding:.3rem .7rem;border:1px solid #222;border-radius:3px;">← Сессии</a>
-  <button class="nav-tab active" data-page="record">ЗАПИСЬ</button>
-  <button class="nav-tab" data-page="settings">НАСТРОЙКИ</button>
+  <span class="nav-brand">✦ DREAMSTORY</span>
+  <span id="session-name" style="font-size:11px;color:#333;padding:0 1.5rem;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+  <div class="nav-links">
+    <a class="nav-link" href="/">← Сессии</a>
+    <a class="nav-link active" href="/record.html">Запись</a>
+    <a class="nav-link" href="/settings.html">Настройки</a>
+    <a class="nav-link" id="nav-viz" href="/viz.html">Визуализация</a>
+  </div>
 </nav>
 
 <!-- ЗАПИСЬ -->
@@ -643,6 +650,15 @@ $("btn-start").onclick = async () => {
 
 const stopAll=()=>{ stopping=true; if(recorder?.state!=="inactive")recorder?.stop(); audioCtx?.close(); clearInterval(timerInterval); dot("tab","");dot("mic","");dot("rec",""); $("btn-stop").disabled=true; $("btn-start").disabled=false; log("Остановлено"); };
 $("btn-stop").onclick=stopAll;
+const SESSION_ID = localStorage.getItem("active-session-id");
+const SESSION_TOKEN = localStorage.getItem("sb-token");
+const SESSION_NAME = localStorage.getItem("active-session-name") || "Сессия";
+
+if (!SESSION_ID || !SESSION_TOKEN) window.location.href = "/";
+
+$("session-name").textContent = SESSION_NAME;
+const vizLink = document.getElementById("nav-viz");
+if (vizLink && SESSION_ID) vizLink.href = `/viz.html?session=${SESSION_ID}`;
 </script>
 </body>
 </html>
