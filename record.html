@@ -2,21 +2,18 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>DnD Narrative Prototype</title>
+<title>DreamStory — Запись</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: monospace; background: #0d0d0d; color: #c9c9c9; min-height: 100vh; }
 .nav { display:flex; align-items:center; background:#111; border-bottom:1px solid #1e1e1e; padding:0 1.5rem; height:46px; position:sticky; top:0; z-index:10; }
-.nav-brand { font-size:11px; letter-spacing:.18em; color:#444; margin-right:2rem; flex-shrink:0; }
-.nav-tab { background:none; border:none; border-bottom:2px solid transparent; height:46px; padding:0 1rem; font-family:monospace; font-size:11px; letter-spacing:.1em; color:#555; cursor:pointer; transition:all .2s; }
-.nav-tab:hover { color:#999; }
-.nav-tab.active { color:#c9c9c9; border-bottom-color:#4caf72; }
+.nav-brand { font-size:12px; letter-spacing:.18em; color:#4caf72; flex-shrink:0; }
+.nav-session { font-size:11px; color:#333; flex:1; padding:0 1.5rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .nav-links { display:flex; align-items:center; gap:.25rem; flex-shrink:0; }
 .nav-link { font-family:monospace; font-size:10px; letter-spacing:.08em; color:#444; text-decoration:none; padding:.3rem .7rem; border:1px solid transparent; border-radius:3px; transition:all .2s; white-space:nowrap; }
 .nav-link:hover { color:#c9c9c9; border-color:#2a2a2a; }
 .nav-link.active { color:#4caf72; border-color:#4caf7230; }
-.page { display:none; padding:1.75rem 1.5rem; max-width:780px; margin:0 auto; }
-.page.active { display:block; }
+.page { padding:1.75rem 1.5rem; max-width:780px; margin:0 auto; }
 .box { background:#181818; border:1px solid #2a2a2a; border-radius:6px; padding:1.25rem 1.5rem; margin-bottom:1rem; }
 .box-title { font-size:10px; letter-spacing:.12em; color:#444; margin-bottom:1rem; padding-bottom:.6rem; border-bottom:1px solid #1e1e1e; }
 .row { display:flex; align-items:center; gap:.75rem; margin-bottom:.6rem; }
@@ -24,17 +21,11 @@ body { font-family: monospace; background: #0d0d0d; color: #c9c9c9; min-height: 
 label { font-size:12px; color:#666; flex-shrink:0; min-width:90px; }
 input[type=text], input[type=password] { flex:1; background:#111; border:1px solid #222; border-radius:3px; padding:.45rem .75rem; color:#ccc; font-family:monospace; font-size:12px; outline:none; transition:border-color .2s; }
 input:focus { border-color:#4a8fcc; }
-textarea { width:100%; background:#111; border:1px solid #222; border-radius:3px; padding:.6rem .75rem; color:#ccc; font-family:monospace; font-size:12px; outline:none; resize:vertical; line-height:1.6; transition:border-color .2s; }
-textarea:focus { border-color:#4a8fcc; }
 button { font-family:monospace; font-size:11px; letter-spacing:.1em; padding:.5rem 1.1rem; border:1px solid #333; background:transparent; color:#777; cursor:pointer; border-radius:3px; transition:all .2s; }
 button:hover:not(:disabled) { border-color:#4caf72; color:#4caf72; }
 button:disabled { opacity:.3; cursor:default; }
 button.stop { border-color:#c0504040; color:#c05040; }
 button.stop:hover:not(:disabled) { background:#c0504015; }
-button.save { border-color:#4a8fcc60; color:#4a8fcc; }
-button.save:hover:not(:disabled) { background:#4a8fcc15; border-color:#4a8fcc; }
-button.danger { border-color:#c0504060; color:#c05040; font-size:10px; padding:.3rem .7rem; }
-button.danger:hover { background:#c0504015; }
 .dot { width:8px; height:8px; border-radius:50%; background:#2a2a2a; transition:background .3s; flex-shrink:0; }
 .dot.on { background:#4caf72; box-shadow:0 0 6px #4caf7280; }
 .dot.err { background:#c05040; }
@@ -61,8 +52,6 @@ button.danger:hover { background:#c0504015; }
 .meter-fill.mid { background:#f0c040; }
 .meter-fill.hot { background:#c05040; }
 .meter-val { font-size:11px; color:#444; min-width:32px; text-align:right; }
-
-/* Events */
 .events-list { display:flex; flex-direction:column; gap:.6rem; }
 .event-card { background:#131313; border:1px solid #222; border-radius:4px; padding:.85rem 1rem; }
 .event-card.has-image { border-color:#4caf7230; }
@@ -82,32 +71,14 @@ button.danger:hover { background:#c0504015; }
 .event-prompt { font-size:10px; color:#3a5a3a; font-style:italic; margin-top:.5rem; line-height:1.5; border-top:1px solid #1e1e1e; padding-top:.5rem; }
 .img-badge { font-size:10px; color:#4caf72; letter-spacing:.06em; }
 .no-events { color:#333; font-style:italic; font-size:12px; text-align:center; padding:1.5rem 0; }
-
-/* Settings */
-.field-label { font-size:10px; letter-spacing:.1em; color:#555; margin-bottom:.4rem; display:block; }
-.char-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
-@media(max-width:600px){ .char-grid { grid-template-columns:1fr; } }
-.char-card { background:#131313; border:1px solid #222; border-radius:6px; padding:1rem 1.1rem; }
-.char-num { font-size:10px; letter-spacing:.1em; color:#4caf72; display:block; margin-bottom:.85rem; }
-.char-field { margin-bottom:.65rem; }
-.char-field:last-child { margin-bottom:0; }
-.char-field label { font-size:10px; letter-spacing:.08em; color:#555; display:block; margin-bottom:.3rem; min-width:unset; }
-.char-field input { width:100%; flex:unset; }
-.char-field textarea { min-height:70px; }
-.art-upload { display:flex; align-items:center; gap:.75rem; }
-.art-thumb { width:44px; height:44px; border-radius:4px; border:1px solid #2a2a2a; background:#111; object-fit:cover; flex-shrink:0; }
-.art-placeholder { width:44px; height:44px; border-radius:4px; border:1px dashed #2a2a2a; background:#111; display:flex; align-items:center; justify-content:center; font-size:16px; color:#2a2a2a; flex-shrink:0; }
-.art-btn { font-size:10px; padding:.3rem .65rem; color:#555; border-color:#2a2a2a; letter-spacing:.06em; }
-.art-btn:hover:not(:disabled) { color:#4a8fcc; border-color:#4a8fcc; }
-.save-bar { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
-.save-status { font-size:11px; color:#4caf72; min-height:16px; transition:opacity .3s; }
+.settings-hint { font-size:11px; color:#333; font-style:italic; }
 </style>
 </head>
 <body>
 
 <nav class="nav">
   <span class="nav-brand">✦ DREAMSTORY</span>
-  <span id="session-name" style="font-size:11px;color:#333;padding:0 1.5rem;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+  <span class="nav-session" id="session-name"></span>
   <div class="nav-links">
     <a class="nav-link" href="/">← Сессии</a>
     <a class="nav-link active" href="/record.html">Запись</a>
@@ -116,20 +87,20 @@ button.danger:hover { background:#c0504015; }
   </div>
 </nav>
 
-<!-- ЗАПИСЬ -->
-<div class="page active" id="page-record">
+<div class="page">
+
   <div class="box">
     <div class="box-title">КЛЮЧИ API</div>
     <div class="row"><label>OpenAI</label><input type="password" id="openai-key" placeholder="sk-..." /></div>
-    
     <div class="row">
       <label>Язык</label>
       <input type="text" id="lang" value="ru" style="max-width:60px;" />
       <label style="min-width:unset;">Чанк (сек)</label>
       <input type="text" id="chunk-sec" value="30" style="max-width:60px;" />
       <label style="min-width:unset;">VAD порог</label>
-      <input type="text" id="vad-threshold" value="10" style="max-width:60px;" title="Минимальный средний уровень громкости (0-100). Чанки тише — пропускаются." />
+      <input type="text" id="vad-threshold" value="10" style="max-width:60px;" />
     </div>
+    <div class="row"><span class="settings-hint" id="settings-hint">Загружаю настройки сессии...</span></div>
   </div>
 
   <div class="box">
@@ -153,7 +124,7 @@ button.danger:hover { background:#c0504015; }
     <div class="stat-row"><span>Чанков / событий</span><span class="stat-val"><span id="s-chunks">0</span> / <span id="s-events">0</span></span></div>
     <div class="stat-row"><span>Минут аудио</span><span class="stat-val" id="s-mins">0.0</span></div>
     <div class="stat-row"><span>Стоимость Whisper</span><span class="stat-val" id="s-cost-w">$0.000</span></div>
-    <div class="stat-row"><span>Стоимость Claude (est.)</span><span class="stat-val" id="s-cost-c">$0.000</span></div>
+    <div class="stat-row"><span>Стоимость GPT-4o (est.)</span><span class="stat-val" id="s-cost-c">$0.000</span></div>
   </div>
 
   <div class="box">
@@ -170,229 +141,92 @@ button.danger:hover { background:#c0504015; }
     <div class="box-title">ЛОГ</div>
     <div class="log-box" id="log"></div>
   </div>
-</div>
 
-<!-- НАСТРОЙКИ -->
-<div class="page" id="page-settings">
-  <div class="box">
-    <div class="box-title">МИР И СЕТТИНГ</div>
-    <div class="char-field">
-      <label class="field-label">НАЗВАНИЕ МИРА / КАМПАНИИ</label>
-      <input type="text" id="s-world-name" placeholder="Forgotten Realms, Curse of Strahd..." />
-    </div>
-    <div class="char-field" style="margin-top:.75rem;">
-      <label class="field-label">ОПИСАНИЕ СЕТТИНГА — подаётся в каждый запрос к Claude и image prompt</label>
-      <textarea id="s-world-desc" rows="4" placeholder="Тёмное фэнтези, средневековье. Мир на грани коллапса после войны богов. Визуальный стиль: детализированная fantasy-иллюстрация, тёмная палитра с золотыми и багровыми акцентами."></textarea>
-    </div>
-    <div class="char-field" style="margin-top:.75rem;">
-      <label class="field-label">ХУДОЖЕСТВЕННЫЙ СТИЛЬ для image gen</label>
-      <input type="text" id="s-art-style" placeholder="dark fantasy illustration, detailed, dramatic lighting, painterly" />
-    </div>
-  </div>
-
-  <div class="box">
-    <div class="box-title">ПЕРСОНАЖИ ПАРТИИ</div>
-    <div class="char-grid" id="char-grid"></div>
-  </div>
-
-  <div class="box" style="background:transparent;border-color:#1a1a1a;">
-    <div class="save-bar">
-      <button class="save" id="btn-save">СОХРАНИТЬ</button>
-      <span class="save-status" id="save-status"></span>
-      <button class="danger" id="btn-reset">сбросить всё</button>
-    </div>
-  </div>
 </div>
 
 <script>
 const $ = id => document.getElementById(id);
 
-// Navigation
-document.querySelectorAll(".nav-tab").forEach(tab => {
-  tab.onclick = () => {
-    document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
-    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-    tab.classList.add("active");
-    $("page-" + tab.dataset.page).classList.add("active");
-  };
-});
+// ── Session ───────────────────────────────────
+const SESSION_ID    = localStorage.getItem("active-session-id");
+const SESSION_TOKEN = localStorage.getItem("sb-token");
+const SESSION_NAME  = localStorage.getItem("active-session-name") || "Сессия";
 
-// API key persistence
-["openai-key"].forEach(id => {
-  const el = $(id); if (!el) return;
-  const saved = localStorage.getItem(id);
-  if (saved) el.value = saved;
-  el.addEventListener("input", e => localStorage.setItem(id, e.target.value.trim()));
-});
+if (!SESSION_ID || !SESSION_TOKEN) window.location.href = "/";
 
-// ── Settings ──────────────────────────────────
-const DEFAULT_CHARS = Array(4).fill(null).map(() => ({ name:"", race:"", appearance:"", art:"" }));
-const loadSettings = () => { try { return JSON.parse(localStorage.getItem("dnd-session")||"null"); } catch { return null; } };
+$("session-name").textContent = SESSION_NAME;
+const vizLink = $("nav-viz");
+if (vizLink && SESSION_ID) vizLink.href = `/viz.html?session=${SESSION_ID}`;
 
-const buildCharCards = (chars) => {
-  const grid = $("char-grid");
-  grid.innerHTML = "";
-  chars.forEach((ch, i) => {
-    const card = document.createElement("div");
-    card.className = "char-card";
+// ── API key ───────────────────────────────────
+const savedKey = localStorage.getItem("openai-key");
+if (savedKey) $("openai-key").value = savedKey;
+$("openai-key").addEventListener("input", e => localStorage.setItem("openai-key", e.target.value.trim()));
 
-    const num = document.createElement("span");
-    num.className = "char-num";
-    num.textContent = `ПЕРСОНАЖ ${i+1}`;
-    card.appendChild(num);
+// ── Session settings (from Supabase) ──────────
+let sessionSettings = {};
 
-    const makeField = (labelText, inputId, type, placeholder, value) => {
-      const wrap = document.createElement("div");
-      wrap.className = "char-field";
-      const lbl = document.createElement("label");
-      lbl.textContent = labelText;
-      wrap.appendChild(lbl);
-      let inp;
-      if (type === "textarea") {
-        inp = document.createElement("textarea");
-        inp.rows = 3;
-        inp.placeholder = placeholder;
-        inp.textContent = value || "";
-      } else {
-        inp = document.createElement("input");
-        inp.type = "text";
-        inp.placeholder = placeholder;
-        inp.value = value || "";
-      }
-      inp.id = inputId;
-      wrap.appendChild(inp);
-      return wrap;
-    };
-
-    card.appendChild(makeField("ИМЯ", `c${i}-name`, "text", "Имя персонажа", ch.name));
-    card.appendChild(makeField("КЛАСС / РАСА", `c${i}-race`, "text", "Паладин, человек", ch.race));
-    card.appendChild(makeField("ОПИСАНИЕ ВНЕШНОСТИ", `c${i}-appearance`, "textarea", "Внешность для image prompt...", ch.appearance));
-
-    // Art field
-    const artWrap = document.createElement("div");
-    artWrap.className = "char-field";
-    const artLbl = document.createElement("label");
-    artLbl.textContent = "РЕФЕРЕНС-АРТ";
-    artWrap.appendChild(artLbl);
-
-    const artRow = document.createElement("div");
-    artRow.className = "art-upload";
-
-    const artEl = document.createElement(ch.art ? "img" : "div");
-    artEl.id = `c${i}-art`;
-    artEl.dataset.src = ch.art || "";
-    if (ch.art) { artEl.className = "art-thumb"; artEl.src = ch.art; }
-    else { artEl.className = "art-placeholder"; artEl.textContent = "✦"; }
-    artRow.appendChild(artEl);
-
-    const artBtns = document.createElement("div");
-    artBtns.style.cssText = "display:flex;flex-direction:column;gap:.4rem;";
-    const btnUp = document.createElement("button");
-    btnUp.className = "art-btn"; btnUp.textContent = "Загрузить";
-    btnUp.onclick = () => triggerArt(i);
-    const btnCl = document.createElement("button");
-    btnCl.className = "art-btn danger";
-    btnCl.style.cssText = "border-color:#c0504040;color:#c05040;";
-    btnCl.textContent = "Удалить";
-    btnCl.onclick = () => clearArt(i);
-    artBtns.appendChild(btnUp); artBtns.appendChild(btnCl);
-    artRow.appendChild(artBtns);
-
-    const fileInp = document.createElement("input");
-    fileInp.type = "file"; fileInp.id = `c${i}-file`;
-    fileInp.accept = "image/*"; fileInp.style.display = "none";
-    fileInp.onchange = function() { handleArt(i, this); };
-    artRow.appendChild(fileInp);
-
-    artWrap.appendChild(artRow);
-    card.appendChild(artWrap);
-    grid.appendChild(card);
-  });
-}
-const triggerArt = i => $(`c${i}-file`).click();
-const handleArt = (i, input) => {
-  const file = input.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const img = document.createElement("img"); img.className="art-thumb"; img.id=`c${i}-art`; img.src=e.target.result; img.dataset.src=e.target.result;
-    $(`c${i}-art`).replaceWith(img);
-  };
-  reader.readAsDataURL(file);
-};
-const clearArt = i => {
-  const ph = document.createElement("div"); ph.className="art-placeholder"; ph.id=`c${i}-art`; ph.dataset.src=""; ph.textContent="✦";
-  $(`c${i}-art`).replaceWith(ph);
-};
-
-const initSettings = () => {
-  console.log('initSettings called, char-grid:', $('char-grid'));
-  const saved = loadSettings();
-  buildCharCards(saved?.characters || DEFAULT_CHARS);
-  if (saved) {
-    const wn = $("s-world-name"); if (wn) wn.value = saved.worldName||"";
-    const wd = $("s-world-desc"); if (wd) wd.value = saved.worldDesc||"";
-    const as = $("s-art-style");  if (as) as.value = saved.artStyle||"";
+const loadSessionSettings = async () => {
+  try {
+    const res = await fetch("/api/sessions", {
+      headers: { "Authorization": `Bearer ${SESSION_TOKEN}` }
+    });
+    const sessions = await res.json();
+    const session = Array.isArray(sessions) ? sessions.find(s => s.id === SESSION_ID) : null;
+    if (session?.settings) {
+      sessionSettings = session.settings;
+      // Apply saved recording params
+      if (sessionSettings.lang)  $("lang").value          = sessionSettings.lang;
+      if (sessionSettings.chunk) $("chunk-sec").value     = sessionSettings.chunk;
+      if (sessionSettings.vad)   $("vad-threshold").value = sessionSettings.vad;
+      const charCount = (sessionSettings.characters || []).filter(c => c.name).length;
+      $("settings-hint").textContent = charCount > 0
+        ? `✦ Загружено: ${sessionSettings.worldName || "мир"} · ${charCount} персонажей`
+        : "Настройки сессии не заполнены — перейди в Настройки";
+    } else {
+      $("settings-hint").textContent = "Настройки сессии не заполнены — перейди в Настройки";
+    }
+  } catch(e) {
+    $("settings-hint").textContent = "Не удалось загрузить настройки";
   }
 };
 
-$("btn-save").onclick = () => {
-  const data = {
-    worldName: $("s-world-name").value,
-    worldDesc: $("s-world-desc").value,
-    artStyle:  $("s-art-style").value,
-    characters: Array(4).fill(null).map((_,i) => ({
-      name:       document.getElementById(`c${i}-name`)?.value||"",
-      race:       document.getElementById(`c${i}-race`)?.value||"",
-      appearance: document.getElementById(`c${i}-appearance`)?.value||"",
-      art:        document.getElementById(`c${i}-art`)?.dataset?.src||"",
-    })),
-  };
-  localStorage.setItem("dnd-session", JSON.stringify(data));
-  const st = $("save-status"); st.textContent="Сохранено ✓"; st.style.opacity=1;
-  setTimeout(() => { st.style.opacity=0; }, 2500);
-};
+loadSessionSettings();
 
-$("btn-reset").onclick = () => {
-  if (!confirm("Сбросить все настройки?")) return;
-  localStorage.removeItem("dnd-session"); initSettings();
-};
-
-initSettings();
-
-// ── Narrative context (memory) ────────────────
-const narrativeContext = { events: [], totalChunks: 0 };
+// ── Narrative context ─────────────────────────
+const narrativeContext = { events: [] };
 
 const getSessionContext = () => {
-  const s = loadSettings();
-  const chars = (s?.characters || []).filter(c => c.name).map(c =>
+  const s = sessionSettings;
+  const chars = (s.characters || []).filter(c => c.name).map(c =>
     `- ${c.name} (${c.race||"unknown"}): ${c.appearance||"no description"}`
   ).join("\n");
   const recentEvents = narrativeContext.events.slice(-6).map(e =>
     `[${e.type}] ${e.event}`
   ).join("\n");
-  const charArts = (s?.characters || []).filter(c => c.name && c.art).map(c => ({
+  const charArts = (s.characters || []).filter(c => c.name && c.art).map(c => ({
     name: c.name, art: c.art
   }));
   return {
-    world: s?.worldName || "Unknown world",
-    worldDesc: s?.worldDesc || "",
-    artStyle: s?.artStyle || "fantasy illustration",
+    world:        s.worldName  || "Unknown world",
+    worldDesc:    s.worldDesc  || "",
+    artStyle:     s.artStyle   || "fantasy illustration",
     chars, recentEvents, charArts,
   };
 };
 
-// ── Claude ────────────────────────────────────
+// ── GPT-4o ────────────────────────────────────
 let eventsCount = 0;
 
 const sendToClaude = async (transcriptText) => {
   const key = $("openai-key").value.trim();
   if (!key) { log("OpenAI ключ не введён","err"); return; }
   dot("claude","busy");
-  log("Отправляю в Claude...");
+  log("Отправляю в GPT-4o...");
 
   const ctx = getSessionContext();
 
-  const systemPrompt = `You are a D&D session narrator analyst. Your job is to extract the most significant narrative event from a transcript chunk and decide if it warrants a visual.
+  const systemPrompt = `You are a D&D session narrator analyst. Extract the most significant narrative event from a transcript chunk.
 
 Setting: ${ctx.world}
 World description: ${ctx.worldDesc}
@@ -413,8 +247,7 @@ Rules:
 - event and description must be in the same language as the transcript
 - If transcript has no meaningful content, return null`;
 
-  const userPrompt = `Transcript chunk:
-"${transcriptText}"
+  const userPrompt = `Transcript chunk: "${transcriptText}"
 
 Return a single JSON object:
 {
@@ -424,19 +257,18 @@ Return a single JSON object:
   "generate_image": true or false,
   "image_prompt": "detailed scene for DALL-E, English only"
 }
-
 Or return null if nothing significant happened.`;
 
   try {
     const res = await fetch("/api/claude", {
       method: "POST",
-      headers: { "Content-Type":"application/json", "x-openai-key": $("openai-key").value.trim() },
+      headers: { "Content-Type":"application/json", "x-openai-key": key },
       body: JSON.stringify({
         model: "gpt-4o",
         max_tokens: 600,
         messages: [
           { role:"system", content: systemPrompt },
-          { role:"user", content: userPrompt }
+          { role:"user",   content: userPrompt },
         ],
       }),
     });
@@ -445,17 +277,14 @@ Or return null if nothing significant happened.`;
     if (!res.ok) { log(`GPT error: ${data.error?.message||JSON.stringify(data)}`,"err"); dot("claude","err"); return; }
 
     const raw = (data.choices||[]).map(c=>c.message?.content||"").join("").trim();
-    if (raw === "null" || !raw) { log("Claude: нет значимых событий"); dot("claude","on"); return; }
+    if (raw === "null" || !raw) { log("GPT-4o: нет значимых событий"); dot("claude","on"); return; }
 
-    const clean = raw.replace(/```json|```/g,"").trim();
-    const event = JSON.parse(clean);
+    const event = JSON.parse(raw.replace(/```json|```/g,"").trim());
     if (!event?.event) { dot("claude","on"); return; }
 
-    // Add to memory
     narrativeContext.events.push(event);
     eventsCount++;
 
-    // Update stats — rough token estimate
     const tokenEst = (systemPrompt.length + userPrompt.length + raw.length) / 4;
     const costEst = parseFloat($("s-cost-c").textContent.replace("$","")) + (tokenEst / 1000000 * 3);
     $("s-cost-c").textContent = "$" + costEst.toFixed(4);
@@ -466,18 +295,16 @@ Or return null if nothing significant happened.`;
     dot("claude","on");
     log(`Событие: [${event.type}] ${event.event}`, "ok");
 
-    // Broadcast for viz tab (step 4)
     if (event.generate_image) {
       try {
-        const ctx2 = getSessionContext();
         const bc = new BroadcastChannel("dnd-narrative");
-        bc.postMessage({ type:"event", event, charArts: ctx2.charArts, sessionId: SESSION_ID, token: SESSION_TOKEN });
+        bc.postMessage({ type:"event", event, charArts: getSessionContext().charArts, sessionId: SESSION_ID, token: SESSION_TOKEN });
         bc.close();
       } catch {}
     }
 
   } catch(e) {
-    log("Claude parse error: "+e.message,"err");
+    log("GPT parse error: "+e.message,"err");
     dot("claude","err");
   }
 };
@@ -486,7 +313,6 @@ const addEventCard = (event) => {
   const list = $("events-list");
   const noEvents = list.querySelector(".no-events");
   if (noEvents) noEvents.remove();
-
   const card = document.createElement("div");
   card.className = "event-card" + (event.generate_image ? " has-image" : "");
   card.innerHTML = `
@@ -501,11 +327,10 @@ const addEventCard = (event) => {
     ${(event.characters||[]).length ? `<div class="event-chars">${event.characters.map(c=>`<span class="event-char">${c}</span>`).join("")}</div>` : ""}
     ${event.generate_image && event.image_prompt ? `<div class="event-prompt">prompt: ${event.image_prompt}</div>` : ""}
   `;
-
   list.insertBefore(card, list.firstChild);
 };
 
-// ── Record logic ──────────────────────────────
+// ── Utils ─────────────────────────────────────
 const log = (msg, cls="inf") => {
   const el = document.createElement("span"); el.className=cls;
   el.textContent = `[${new Date().toLocaleTimeString("ru")}] ${msg}`;
@@ -514,9 +339,11 @@ const log = (msg, cls="inf") => {
 const dot = (id, state) => $("dot-"+id).className = "dot"+(state?" "+state:"");
 const setStat = (id, val) => $(id).textContent = val;
 
+// ── Record ────────────────────────────────────
 let recorder, audioCtx, timerInterval, seconds=0;
-let chunksProcessed=0, totalMinutes=0, totalWords=0;
+let chunksProcessed=0, totalMinutes=0;
 let stopping=false, chunkCount=0;
+let currentAudioLevel = 0;
 
 const updateTimer = () => {
   seconds++;
@@ -554,18 +381,14 @@ const sendToWhisper = async (blob, chunkNum) => {
     if (!res.ok) { log(`Whisper error: ${data.error?.message}`,"err"); addTranscriptBlock("[ошибка]",chunkNum); dot("wh","err"); return; }
     const text = data.text?.trim()||"[тишина]";
     addTranscriptBlock(text, chunkNum);
-    chunksProcessed++; totalMinutes += parseFloat($("chunk-sec").value||20)/60;
-    totalWords += text.split(/\s+/).filter(Boolean).length;
+    chunksProcessed++; totalMinutes += parseFloat($("chunk-sec").value||30)/60;
     setStat("s-chunks",chunksProcessed); setStat("s-mins",totalMinutes.toFixed(1));
     setStat("s-cost-w","$"+(totalMinutes*0.006).toFixed(3));
     log(`Whisper ✓ чанк ${chunkNum}`, "ok");
     dot("wh","on");
-    // Pass to Claude if not silence
     if (text !== "[тишина]" && text.length > 20) sendToClaude(text);
   } catch(e) { log("Fetch error: "+e.message,"err"); dot("wh","err"); }
 };
-
-let currentAudioLevel = 0;
 
 const setupMeter = (stream, fillId, valId) => {
   const an=audioCtx.createAnalyser(); an.fftSize=256;
@@ -587,8 +410,10 @@ $("btn-start").onclick = async () => {
   $("btn-start").disabled=true; stopping=false;
   log("Запрашиваю вкладку...");
   let tabStream;
-  try { tabStream=await navigator.mediaDevices.getDisplayMedia({video:true,audio:{echoCancellation:false,noiseSuppression:false}}); dot("tab","on"); log("Вкладка ✓","ok"); }
-  catch(e) { log("Ошибка: "+e.message,"err"); $("btn-start").disabled=false; return; }
+  try {
+    tabStream=await navigator.mediaDevices.getDisplayMedia({video:true,audio:{echoCancellation:false,noiseSuppression:false}});
+    dot("tab","on"); log("Вкладка ✓","ok");
+  } catch(e) { log("Ошибка: "+e.message,"err"); $("btn-start").disabled=false; return; }
   if (!tabStream.getAudioTracks().length) log("Нет аудио — поставь галочку 'Share tab audio'!","err");
   let micStream;
   try { micStream=await navigator.mediaDevices.getUserMedia({audio:true}); dot("mic","on"); log("Микрофон ✓","ok"); }
@@ -599,34 +424,23 @@ $("btn-start").onclick = async () => {
   if (micStream) audioCtx.createMediaStreamSource(micStream).connect(dest);
   if (micStream) setupMeter(micStream,"meter-mic","meter-mic-val");
   if (tabStream.getAudioTracks().length) setupMeter(tabStream,"meter-tab","meter-tab-val");
-  const chunkMs=parseInt($("chunk-sec").value||20)*1000;
-  // VAD — uses levels from meter (already connected to sources)
-  let vadSum = 0, vadSamples = 0;
-  const vadInterval = setInterval(() => {
-    if (audioCtx.state === "closed") { clearInterval(vadInterval); return; }
-    vadSum += currentAudioLevel;
-    vadSamples++;
-    currentAudioLevel = 0;
+  const chunkMs=parseInt($("chunk-sec").value||30)*1000;
+
+  let vadSum=0, vadSamples=0;
+  setInterval(() => {
+    if(audioCtx.state==="closed") return;
+    vadSum+=currentAudioLevel; vadSamples++;
+    currentAudioLevel=0;
   }, 200);
 
-  // Debug — log VAD every 5 sec
-  const vadDebug = setInterval(() => {
-    if (audioCtx.state === "closed") { clearInterval(vadDebug); return; }
-    const avg = vadSamples > 0 ? (vadSum / vadSamples).toFixed(1) : "0.0";
-    log(`VAD debug — уровень: ${avg}, samples: ${vadSamples}, currentLevel: ${currentAudioLevel.toFixed(1)}`);
-  }, 5000);
-
   const startNewChunk=()=>{
-    vadSum = 0; vadSamples = 0;
+    vadSum=0; vadSamples=0;
     const rec=new MediaRecorder(dest.stream,{mimeType:"audio/webm;codecs=opus"});
     rec.ondataavailable=e=>{
       if(e.data?.size>500){
-        const avgLevel = rec._vadAvg || 0;
+        const avgLevel = rec._vadAvg||0;
         const threshold = parseFloat($("vad-threshold").value||10);
-        if (avgLevel < threshold) {
-          log(`Чанк пропущен — тишина (уровень: ${avgLevel.toFixed(1)})`);
-          return;
-        }
+        if (avgLevel < threshold) { log(`Чанк пропущен — тишина (уровень: ${avgLevel.toFixed(1)})`); return; }
         chunkCount++;
         log(`VAD ок (уровень: ${avgLevel.toFixed(1)}) — отправляю чанк ${chunkCount}`);
         sendToWhisper(new Blob([e.data],{type:"audio/webm"}),chunkCount);
@@ -635,30 +449,30 @@ $("btn-start").onclick = async () => {
     rec.start(); recorder=rec;
     setTimeout(()=>{
       if(rec.state!=="inactive"){
-        rec._vadAvg = vadSamples > 0 ? vadSum / vadSamples : 0;
+        rec._vadAvg = vadSamples>0 ? vadSum/vadSamples : 0;
         rec.stop();
-        if(recorder===rec&&!stopping) setTimeout(startNewChunk, 50);
+        if(recorder===rec&&!stopping) setTimeout(startNewChunk,50);
       }
     },chunkMs);
   };
+
   startNewChunk();
-  dot("rec","on"); log(`Запись началась. Чанк каждые ${$("chunk-sec").value||20} сек.`,"ok");
+  dot("rec","on"); log(`Запись началась. Чанк каждые ${$("chunk-sec").value||30} сек.`,"ok");
   seconds=0; timerInterval=setInterval(updateTimer,1000);
   $("btn-stop").disabled=false;
   tabStream.getAudioTracks().forEach(t=>t.onended=()=>{ log("Захват прерван","err"); stopAll(); });
 };
 
-const stopAll=()=>{ stopping=true; if(recorder?.state!=="inactive")recorder?.stop(); audioCtx?.close(); clearInterval(timerInterval); dot("tab","");dot("mic","");dot("rec",""); $("btn-stop").disabled=true; $("btn-start").disabled=false; log("Остановлено"); };
+const stopAll=()=>{
+  stopping=true;
+  if(recorder?.state!=="inactive") recorder?.stop();
+  audioCtx?.close();
+  clearInterval(timerInterval);
+  dot("tab",""); dot("mic",""); dot("rec","");
+  $("btn-stop").disabled=true; $("btn-start").disabled=false;
+  log("Остановлено");
+};
 $("btn-stop").onclick=stopAll;
-const SESSION_ID = localStorage.getItem("active-session-id");
-const SESSION_TOKEN = localStorage.getItem("sb-token");
-const SESSION_NAME = localStorage.getItem("active-session-name") || "Сессия";
-
-if (!SESSION_ID || !SESSION_TOKEN) window.location.href = "/";
-
-$("session-name").textContent = SESSION_NAME;
-const vizLink = document.getElementById("nav-viz");
-if (vizLink && SESSION_ID) vizLink.href = `/viz.html?session=${SESSION_ID}`;
 </script>
 </body>
 </html>
