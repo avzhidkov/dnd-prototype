@@ -1,8 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
+const getSupabase = (token) => createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
+  process.env.SUPABASE_ANON_KEY,
+  { global: { headers: { Authorization: `Bearer ${token}` } } }
 );
 
 const getBody = (req) => new Promise((resolve, reject) => {
@@ -12,10 +13,8 @@ const getBody = (req) => new Promise((resolve, reject) => {
   req.on("error", reject);
 });
 
-const getUser = async (req) => {
-  const token = req.headers.authorization?.replace("Bearer ", "");
-  if (!token) return null;
-  const { data } = await supabase.auth.getUser(token);
+const getUser = async (req, sb) => {
+  const { data } = await sb.auth.getUser();
   return data?.user || null;
 };
 
@@ -25,14 +24,15 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  const user = await getUser(req);
+  const token = req.headers.authorization?.replace("Bearer ", "");
+  if (!token) return res.status(401).json({ error: "Unauthorized" });
+
+  const sb = getSupabase(token);
+  const user = await getUser(req, sb);
   if (!user) return res.status(401).json({ error: "Unauthorized" });
 
-  const client = supabase;
-
-  // GET /api/sessions — list all sessions
   if (req.method === "GET") {
-    const { data, error } = await client
+    const { data, error } = await sb
       .from("sessions")
       .select("*")
       .eq("user_id", user.id)
@@ -41,10 +41,9 @@ export default async function handler(req, res) {
     return res.status(200).json(data);
   }
 
-  // POST /api/sessions — create session
   if (req.method === "POST") {
     const body = await getBody(req);
-    const { data, error } = await client
+    const { data, error } = await sb
       .from("sessions")
       .insert({ user_id: user.id, name: body.name || "Новая сессия", settings: body.settings || {} })
       .select()
@@ -53,11 +52,10 @@ export default async function handler(req, res) {
     return res.status(201).json(data);
   }
 
-  // PATCH /api/sessions?id=xxx — update settings
   if (req.method === "PATCH") {
-    const id = req.query?.id || new URL(req.url, "http://x").searchParams.get("id");
+    const id = new URL(req.url, "http://x").searchParams.get("id");
     const body = await getBody(req);
-    const { data, error } = await client
+    const { data, error } = await sb
       .from("sessions")
       .update({ settings: body.settings, name: body.name })
       .eq("id", id)
@@ -68,10 +66,9 @@ export default async function handler(req, res) {
     return res.status(200).json(data);
   }
 
-  // DELETE /api/sessions?id=xxx
   if (req.method === "DELETE") {
-    const id = req.query?.id || new URL(req.url, "http://x").searchParams.get("id");
-    const { error } = await client
+    const id = new URL(req.url, "http://x").searchParams.get("id");
+    const { error } = await sb
       .from("sessions")
       .delete()
       .eq("id", id)
