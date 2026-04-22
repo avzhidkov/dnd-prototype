@@ -1,8 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
+const getSupabase = (token) => createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
+  process.env.SUPABASE_ANON_KEY,
+  { global: { headers: { Authorization: `Bearer ${token}` } } }
 );
 
 const getBody = (req) => new Promise((resolve, reject) => {
@@ -12,28 +13,25 @@ const getBody = (req) => new Promise((resolve, reject) => {
   req.on("error", reject);
 });
 
-const getUser = async (req) => {
-  const token = req.headers.authorization?.replace("Bearer ", "");
-  if (!token) return null;
-  const { data } = await supabase.auth.getUser(token);
-  return data?.user || null;
-};
-
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  const user = await getUser(req);
+  const token = req.headers.authorization?.replace("Bearer ", "");
+  if (!token) return res.status(401).json({ error: "Unauthorized" });
+
+  const sb = getSupabase(token);
+  const { data: { user } } = await sb.auth.getUser();
   if (!user) return res.status(401).json({ error: "Unauthorized" });
 
-  const client = supabase;
+  const url = new URL(req.url, "http://x");
+  const id = url.searchParams.get("id");
 
-  // GET /api/sessions — list all sessions
   if (req.method === "GET") {
-    const { data, error } = await client
-      .from("sessions")
+    const { data, error } = await sb
+      .from("campaigns")
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
@@ -41,41 +39,29 @@ export default async function handler(req, res) {
     return res.status(200).json(data);
   }
 
-  // POST /api/sessions — create session
   if (req.method === "POST") {
     const body = await getBody(req);
-    const { data, error } = await client
-      .from("sessions")
-      .insert({ user_id: user.id, name: body.name || "Новая сессия", settings: body.settings || {} })
-      .select()
-      .single();
+    const { data, error } = await sb
+      .from("campaigns")
+      .insert({ user_id: user.id, name: body.name || "Новая кампания", description: body.description || "" })
+      .select().single();
     if (error) return res.status(500).json({ error: error.message });
     return res.status(201).json(data);
   }
 
-  // PATCH /api/sessions?id=xxx — update settings
   if (req.method === "PATCH") {
-    const id = req.query?.id || new URL(req.url, "http://x").searchParams.get("id");
     const body = await getBody(req);
-    const { data, error } = await client
-      .from("sessions")
-      .update({ settings: body.settings, name: body.name })
-      .eq("id", id)
-      .eq("user_id", user.id)
-      .select()
-      .single();
+    const { data, error } = await sb
+      .from("campaigns")
+      .update({ name: body.name, description: body.description })
+      .eq("id", id).eq("user_id", user.id)
+      .select().single();
     if (error) return res.status(500).json({ error: error.message });
     return res.status(200).json(data);
   }
 
-  // DELETE /api/sessions?id=xxx
   if (req.method === "DELETE") {
-    const id = req.query?.id || new URL(req.url, "http://x").searchParams.get("id");
-    const { error } = await client
-      .from("sessions")
-      .delete()
-      .eq("id", id)
-      .eq("user_id", user.id);
+    const { error } = await sb.from("campaigns").delete().eq("id", id).eq("user_id", user.id);
     if (error) return res.status(500).json({ error: error.message });
     return res.status(200).json({ ok: true });
   }

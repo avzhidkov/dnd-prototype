@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>DreamStory — Кампания</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: monospace; background: #0d0d0d; color: #c9c9c9; min-height: 100vh; }
+.nav { display:flex; align-items:center; background:#111; border-bottom:1px solid #1e1e1e; padding:0 1.5rem; height:46px; position:sticky; top:0; z-index:10; }
+.nav-brand { font-size:12px; letter-spacing:.18em; color:#4caf72; flex-shrink:0; }
+.nav-campaign { font-size:11px; color:#333; flex:1; padding:0 1.5rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.nav-links { display:flex; align-items:center; gap:.25rem; flex-shrink:0; }
+.nav-link { font-family:monospace; font-size:10px; letter-spacing:.08em; color:#444; text-decoration:none; padding:.3rem .7rem; border:1px solid transparent; border-radius:3px; transition:all .2s; white-space:nowrap; }
+.nav-link:hover { color:#c9c9c9; border-color:#2a2a2a; }
+.page { padding:2rem 1.5rem; max-width:700px; margin:0 auto; }
+.page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; gap:1rem; flex-wrap:wrap; }
+.page-title { font-size:11px; letter-spacing:.15em; color:#444; }
+.header-actions { display:flex; gap:.5rem; }
+.btn { font-family:monospace; font-size:11px; letter-spacing:.08em; padding:.45rem 1rem; border:1px solid #333; background:transparent; color:#777; cursor:pointer; border-radius:3px; transition:all .2s; }
+.btn:hover { border-color:#4caf72; color:#4caf72; }
+.btn.primary { border-color:#4caf7260; color:#4caf72; }
+.btn.primary:hover { background:#4caf7215; }
+.btn.danger { border-color:#c0504040; color:#c05040; font-size:10px; padding:.3rem .6rem; }
+.btn.danger:hover { background:#c0504015; }
+.btn.viz { border-color:#c084f040; color:#c084f0; }
+.btn.viz:hover { background:#c084f015; }
+.list { display:flex; flex-direction:column; gap:.6rem; }
+.card { background:#181818; border:1px solid #2a2a2a; border-radius:6px; padding:1rem 1.25rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; transition:border-color .2s; }
+.card:hover { border-color:#4caf7240; }
+.card-info { flex:1; min-width:0; }
+.card-name { font-size:14px; color:#ccc; margin-bottom:.2rem; }
+.card-meta { font-size:11px; color:#444; }
+.card-actions { display:flex; gap:.5rem; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; }
+.empty { text-align:center; padding:4rem 2rem; font-size:12px; color:#2a2a2a; letter-spacing:.06em; line-height:2; }
+.modal-bg { position:fixed; inset:0; background:rgba(0,0,0,.75); display:none; align-items:center; justify-content:center; z-index:100; }
+.modal-bg.open { display:flex; }
+.modal { background:#181818; border:1px solid #2a2a2a; border-radius:6px; padding:1.75rem; width:100%; max-width:380px; display:flex; flex-direction:column; gap:1rem; }
+.modal-title { font-size:11px; letter-spacing:.12em; color:#555; }
+.modal-inp { width:100%; background:#111; border:1px solid #222; border-radius:3px; padding:.5rem .75rem; color:#ccc; font-family:monospace; font-size:13px; outline:none; transition:border-color .2s; }
+.modal-inp:focus { border-color:#4caf72; }
+.modal-row { display:flex; gap:.75rem; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <span class="nav-brand">✦ DREAMSTORY</span>
+  <span class="nav-campaign" id="nav-campaign"></span>
+  <div class="nav-links">
+    <a class="nav-link" href="/">← Кампании</a>
+    <a class="nav-link" id="nav-viz-campaign" href="#">Визуал кампании</a>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="page-header">
+    <span class="page-title">СЕССИИ</span>
+    <div class="header-actions">
+      <button class="btn primary" id="btn-new-session">+ Новая сессия</button>
+    </div>
+  </div>
+  <div class="list" id="sessions-list">
+    <div class="empty">Загрузка...</div>
+  </div>
+</div>
+
+<!-- New session modal -->
+<div class="modal-bg" id="modal-session">
+  <div class="modal">
+    <span class="modal-title">НОВАЯ СЕССИЯ</span>
+    <input class="modal-inp" type="text" id="new-session-name" placeholder="Сессия 1 — Прибытие в город..." />
+    <div class="modal-row">
+      <button class="btn primary" id="modal-session-create" style="flex:1;">Создать</button>
+      <button class="btn" id="modal-session-cancel">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const CAMPAIGN_ID   = localStorage.getItem("active-campaign-id");
+const CAMPAIGN_NAME = localStorage.getItem("active-campaign-name") || "Кампания";
+const TOKEN         = localStorage.getItem("sb-token");
+
+if (!CAMPAIGN_ID || !TOKEN) window.location.href = "/";
+
+$("nav-campaign").textContent = CAMPAIGN_NAME;
+$("nav-viz-campaign").href = `/viz.html?campaign=${CAMPAIGN_ID}`;
+
+const api = (path, opts = {}) => fetch(path, {
+  ...opts,
+  headers: { "Content-Type":"application/json", "Authorization": `Bearer ${TOKEN}`, ...(opts.headers||{}) },
+}).then(r => r.json());
+
+const loadSessions = async () => {
+  const data = await api(`/api/sessions?campaign_id=${CAMPAIGN_ID}`);
+  const list = $("sessions-list");
+  if (!Array.isArray(data) || data.length === 0) {
+    list.innerHTML = '<div class="empty">Нет сессий.<br>Создай первую!</div>';
+    return;
+  }
+  list.innerHTML = "";
+  data.forEach(s => {
+    const card = document.createElement("div");
+    card.className = "card";
+    const d = new Date(s.created_at);
+    card.innerHTML = `
+      <div class="card-info">
+        <div class="card-name">${s.name}</div>
+        <div class="card-meta">${d.toLocaleDateString("ru")} · ${d.toLocaleTimeString("ru",{hour:"2-digit",minute:"2-digit"})}</div>
+      </div>
+      <div class="card-actions">
+        <button class="btn primary" onclick="openSession('${s.id}','${s.name.replace(/'/g,"\\'")}')">Запись</button>
+        <button class="btn viz" onclick="openViz('${s.id}')">Визуал</button>
+        <button class="btn" onclick="openSettings('${s.id}','${s.name.replace(/'/g,"\\'")}')">⚙</button>
+        <button class="btn danger" onclick="deleteSession(event,'${s.id}')">×</button>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+};
+
+const openSession = (id, name) => {
+  localStorage.setItem("active-session-id", id);
+  localStorage.setItem("active-session-name", name);
+  window.location.href = "/record.html";
+};
+
+const openSettings = (id, name) => {
+  localStorage.setItem("active-session-id", id);
+  localStorage.setItem("active-session-name", name);
+  window.location.href = "/settings.html";
+};
+
+const openViz = (id) => {
+  window.open(`/viz.html?session=${id}`, "_blank");
+};
+
+const deleteSession = async (e, id) => {
+  e.stopPropagation();
+  if (!confirm("Удалить сессию и все её данные?")) return;
+  await api(`/api/sessions?id=${id}`, { method: "DELETE" });
+  loadSessions();
+};
+
+// Modal
+$("btn-new-session").onclick = () => { $("modal-session").classList.add("open"); $("new-session-name").focus(); };
+$("modal-session-cancel").onclick = () => $("modal-session").classList.remove("open");
+$("modal-session-create").onclick = async () => {
+  const name = $("new-session-name").value.trim() || "Новая сессия";
+  const data = await api("/api/sessions", {
+    method: "POST",
+    body: JSON.stringify({ name, campaign_id: CAMPAIGN_ID }),
+  });
+  $("modal-session").classList.remove("open");
+  $("new-session-name").value = "";
+  if (data.id) openSession(data.id, data.name);
+};
+$("new-session-name").onkeydown = e => { if (e.key === "Enter") $("modal-session-create").click(); };
+
+loadSessions();
+</script>
+</body>
+</html>

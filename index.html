@@ -2,55 +2,45 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>DreamStory — Сессии</title>
+<title>DreamStory</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: monospace; background: #0d0d0d; color: #c9c9c9; min-height: 100vh; }
 .nav { display:flex; align-items:center; justify-content:space-between; background:#111; border-bottom:1px solid #1e1e1e; padding:0 1.5rem; height:46px; }
-.nav-brand { font-size:12px; letter-spacing:.18em; color:#4caf72; }
-.nav-user { font-size:11px; color:#444; display:flex; align-items:center; gap:1rem; }
-.page { padding:2rem 1.5rem; max-width:680px; margin:0 auto; }
-
-/* Auth */
-.auth-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80vh; gap:1.5rem; }
-.auth-title { font-size:14px; letter-spacing:.15em; color:#555; }
-.auth-box { background:#181818; border:1px solid #2a2a2a; border-radius:6px; padding:2rem; width:100%; max-width:360px; display:flex; flex-direction:column; gap:1rem; }
-.auth-label { font-size:10px; letter-spacing:.1em; color:#555; display:block; margin-bottom:.35rem; }
-.auth-inp { width:100%; background:#111; border:1px solid #222; border-radius:3px; padding:.55rem .75rem; color:#ccc; font-family:monospace; font-size:13px; outline:none; transition:border-color .2s; }
-.auth-inp:focus { border-color:#4caf72; }
-.auth-btn { width:100%; font-family:monospace; font-size:12px; letter-spacing:.06em; padding:.75rem; border:1px solid #4caf7260; background:transparent; color:#4caf72; cursor:pointer; border-radius:3px; transition:all .2s; display:flex; align-items:center; justify-content:center; }
-.auth-btn:hover { background:#4caf7215; }
-.auth-msg { font-size:12px; color:#555; text-align:center; min-height:18px; }
-.auth-msg.ok { color:#4caf72; }
-.auth-msg.err { color:#c05040; }
-
-/* Sessions */
-.page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; }
-.page-title { font-size:11px; letter-spacing:.15em; color:#444; }
-.btn { font-family:monospace; font-size:11px; letter-spacing:.1em; padding:.45rem 1rem; border:1px solid #333; background:transparent; color:#777; cursor:pointer; border-radius:3px; transition:all .2s; }
+.nav-brand { font-size:13px; letter-spacing:.18em; color:#4caf72; }
+.nav-user { display:flex; align-items:center; gap:1rem; font-size:11px; color:#444; }
+.btn { font-family:monospace; font-size:11px; letter-spacing:.08em; padding:.45rem 1rem; border:1px solid #333; background:transparent; color:#777; cursor:pointer; border-radius:3px; transition:all .2s; }
 .btn:hover { border-color:#4caf72; color:#4caf72; }
 .btn.primary { border-color:#4caf7260; color:#4caf72; }
 .btn.primary:hover { background:#4caf7215; }
 .btn.danger { border-color:#c0504040; color:#c05040; font-size:10px; padding:.3rem .6rem; }
 .btn.danger:hover { background:#c0504015; }
-
-.session-list { display:flex; flex-direction:column; gap:.6rem; }
-.session-card { background:#181818; border:1px solid #2a2a2a; border-radius:6px; padding:1rem 1.25rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; transition:border-color .2s; cursor:pointer; }
-.session-card:hover { border-color:#4caf7240; }
-.session-info { flex:1; min-width:0; }
-.session-name { font-size:14px; color:#ccc; margin-bottom:.25rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.session-meta { font-size:11px; color:#444; }
-.session-actions { display:flex; gap:.5rem; flex-shrink:0; }
-.empty-state { text-align:center; padding:4rem 2rem; font-size:12px; color:#333; letter-spacing:.05em; }
-
-/* New session modal */
-.modal-bg { position:fixed; inset:0; background:rgba(0,0,0,.7); display:flex; align-items:center; justify-content:center; z-index:100; display:none; }
+.page { padding:2rem 1.5rem; max-width:700px; margin:0 auto; }
+.page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; }
+.page-title { font-size:11px; letter-spacing:.15em; color:#444; }
+.list { display:flex; flex-direction:column; gap:.6rem; }
+.card { background:#181818; border:1px solid #2a2a2a; border-radius:6px; padding:1rem 1.25rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; transition:border-color .2s; }
+.card:hover { border-color:#4caf7240; }
+.card-info { flex:1; min-width:0; cursor:pointer; }
+.card-name { font-size:14px; color:#ccc; margin-bottom:.2rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card-meta { font-size:11px; color:#444; }
+.card-desc { font-size:11px; color:#3a3a3a; margin-top:.2rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card-actions { display:flex; gap:.5rem; flex-shrink:0; }
+.empty { text-align:center; padding:4rem 2rem; font-size:12px; color:#2a2a2a; letter-spacing:.06em; line-height:2; }
+.modal-bg { position:fixed; inset:0; background:rgba(0,0,0,.75); display:none; align-items:center; justify-content:center; z-index:100; }
 .modal-bg.open { display:flex; }
-.modal { background:#181818; border:1px solid #2a2a2a; border-radius:6px; padding:1.75rem; width:100%; max-width:380px; display:flex; flex-direction:column; gap:1rem; }
+.modal { background:#181818; border:1px solid #2a2a2a; border-radius:6px; padding:1.75rem; width:100%; max-width:400px; display:flex; flex-direction:column; gap:1rem; }
 .modal-title { font-size:11px; letter-spacing:.12em; color:#555; }
 .modal-inp { width:100%; background:#111; border:1px solid #222; border-radius:3px; padding:.5rem .75rem; color:#ccc; font-family:monospace; font-size:13px; outline:none; transition:border-color .2s; }
 .modal-inp:focus { border-color:#4caf72; }
 .modal-row { display:flex; gap:.75rem; }
+
+/* Auth */
+.auth-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80vh; gap:1.5rem; }
+.auth-title { font-size:13px; letter-spacing:.15em; color:#444; }
+.auth-box { background:#181818; border:1px solid #2a2a2a; border-radius:6px; padding:2rem; width:100%; max-width:340px; }
+.auth-btn { width:100%; font-family:monospace; font-size:12px; letter-spacing:.06em; padding:.75rem; border:1px solid #4caf7260; background:transparent; color:#4caf72; cursor:pointer; border-radius:3px; transition:all .2s; display:flex; align-items:center; justify-content:center; gap:.5rem; }
+.auth-btn:hover { background:#4caf7215; }
 </style>
 </head>
 <body>
@@ -64,36 +54,36 @@ body { font-family: monospace; background: #0d0d0d; color: #c9c9c9; min-height: 
 </nav>
 
 <!-- Auth -->
-<div class="auth-wrap" id="auth-wrap">
-  <span class="auth-title">// ВХОД В СИСТЕМУ</span>
+<div class="auth-wrap" id="auth-wrap" style="display:none;">
+  <span class="auth-title">// DREAMSTORY</span>
   <div class="auth-box">
-    <button class="auth-btn google" id="auth-btn">
-      <svg width="18" height="18" viewBox="0 0 48 48" style="vertical-align:middle;margin-right:.6rem;"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+    <button class="auth-btn" id="auth-btn">
+      <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       Войти через Google
     </button>
-    <div class="auth-msg" id="auth-msg"></div>
   </div>
 </div>
 
-<!-- Sessions -->
-<div class="page" id="sessions-page" style="display:none;">
+<!-- Campaigns -->
+<div class="page" id="campaigns-page" style="display:none;">
   <div class="page-header">
-    <span class="page-title">МОИ СЕССИИ</span>
-    <button class="btn primary" id="btn-new">+ Новая сессия</button>
+    <span class="page-title">МОИ КАМПАНИИ</span>
+    <button class="btn primary" id="btn-new-campaign">+ Новая кампания</button>
   </div>
-  <div class="session-list" id="session-list">
-    <div class="empty-state">Загрузка...</div>
+  <div class="list" id="campaigns-list">
+    <div class="empty">Загрузка...</div>
   </div>
 </div>
 
-<!-- New session modal -->
-<div class="modal-bg" id="modal">
+<!-- New campaign modal -->
+<div class="modal-bg" id="modal-campaign">
   <div class="modal">
-    <span class="modal-title">НОВАЯ СЕССИЯ</span>
-    <input class="modal-inp" type="text" id="new-session-name" placeholder="Название сессии..." />
+    <span class="modal-title">НОВАЯ КАМПАНИЯ</span>
+    <input class="modal-inp" type="text" id="new-campaign-name" placeholder="Название кампании..." />
+    <input class="modal-inp" type="text" id="new-campaign-desc" placeholder="Краткое описание (необязательно)" />
     <div class="modal-row">
-      <button class="btn primary" id="modal-create" style="flex:1;">Создать</button>
-      <button class="btn" id="modal-cancel">Отмена</button>
+      <button class="btn primary" id="modal-campaign-create" style="flex:1;">Создать</button>
+      <button class="btn" id="modal-campaign-cancel">Отмена</button>
     </div>
   </div>
 </div>
@@ -101,120 +91,123 @@ body { font-family: monospace; background: #0d0d0d; color: #c9c9c9; min-height: 
 <script>
 const SUPABASE_URL = "https://mbysjfsuqeqjcedgfdmb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_V-Ug9nyp6XPVBIJ3tr3qww_VjwGLg6Z";
-
 const $ = id => document.getElementById(id);
 let token = null;
 
-// Simple Supabase auth via fetch
 const sbFetch = (path, opts = {}) => fetch(`${SUPABASE_URL}${path}`, {
   ...opts,
-  headers: { "Content-Type": "application/json", "apikey": SUPABASE_KEY, "Authorization": `Bearer ${token || SUPABASE_KEY}`, ...(opts.headers || {}) },
+  headers: { "Content-Type":"application/json", "apikey": SUPABASE_KEY, "Authorization": `Bearer ${token||SUPABASE_KEY}`, ...(opts.headers||{}) },
 });
 
 const api = (path, opts = {}) => fetch(path, {
   ...opts,
-  headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, ...(opts.headers || {}) },
+  headers: { "Content-Type":"application/json", "Authorization": `Bearer ${token}`, ...(opts.headers||{}) },
 }).then(r => r.json());
 
-// Check existing session
+// Auth
 const checkSession = async () => {
   const stored = localStorage.getItem("sb-token");
   if (!stored) return showAuth();
   token = stored;
-  // Verify token
   const res = await sbFetch("/auth/v1/user");
   if (!res.ok) { localStorage.removeItem("sb-token"); return showAuth(); }
   const user = await res.json();
-  showSessions(user);
+  showCampaigns(user);
 };
 
 const showAuth = () => {
   $("auth-wrap").style.display = "flex";
-  $("sessions-page").style.display = "none";
+  $("campaigns-page").style.display = "none";
 };
 
-const showSessions = async (user) => {
+const showCampaigns = (user) => {
   $("auth-wrap").style.display = "none";
-  $("sessions-page").style.display = "block";
+  $("campaigns-page").style.display = "block";
   $("nav-email").textContent = user.email;
   $("btn-logout").style.display = "block";
-  loadSessions();
+  loadCampaigns();
 };
 
-// Auth
 $("auth-btn").onclick = () => {
   window.location.href = `${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(window.location.origin + "/")}`;
 };
 
 $("btn-logout").onclick = () => {
   localStorage.removeItem("sb-token");
+  localStorage.removeItem("active-campaign-id");
+  localStorage.removeItem("active-campaign-name");
+  localStorage.removeItem("active-session-id");
+  localStorage.removeItem("active-session-name");
   token = null;
   showAuth();
 };
 
-// Handle magic link token in URL
+// Handle OAuth token in URL hash
 const hash = new URLSearchParams(window.location.hash.replace("#", ""));
 const accessToken = hash.get("access_token");
 if (accessToken) {
   token = accessToken;
   localStorage.setItem("sb-token", token);
   window.history.replaceState({}, "", "/");
-  sbFetch("/auth/v1/user").then(r => r.json()).then(showSessions);
+  sbFetch("/auth/v1/user").then(r => r.json()).then(showCampaigns);
 } else {
   checkSession();
 }
 
-// Sessions
-const loadSessions = async () => {
-  const data = await api("/api/sessions");
-  const list = $("session-list");
+// Campaigns
+const loadCampaigns = async () => {
+  const data = await api("/api/campaigns");
+  const list = $("campaigns-list");
   if (!Array.isArray(data) || data.length === 0) {
-    list.innerHTML = '<div class="empty-state">Нет сессий. Создай первую!</div>';
+    list.innerHTML = '<div class="empty">Нет кампаний.<br>Создай первую!</div>';
     return;
   }
   list.innerHTML = "";
-  data.forEach(s => {
+  data.forEach(c => {
     const card = document.createElement("div");
-    card.className = "session-card";
-    const d = new Date(s.created_at);
+    card.className = "card";
+    const d = new Date(c.created_at);
     card.innerHTML = `
-      <div class="session-info">
-        <div class="session-name">${s.name}</div>
-        <div class="session-meta">${d.toLocaleDateString("ru")} · ${d.toLocaleTimeString("ru", {hour:"2-digit",minute:"2-digit"})}</div>
+      <div class="card-info" onclick="openCampaign('${c.id}','${c.name.replace(/'/g,"\\'")}')">
+        <div class="card-name">${c.name}</div>
+        ${c.description ? `<div class="card-desc">${c.description}</div>` : ""}
+        <div class="card-meta">${d.toLocaleDateString("ru")}</div>
       </div>
-      <div class="session-actions">
-        <button class="btn primary" onclick="openSession('${s.id}', '${s.name}')">Открыть</button>
-        <button class="btn danger" onclick="deleteSession(event, '${s.id}')">×</button>
+      <div class="card-actions">
+        <button class="btn primary" onclick="openCampaign('${c.id}','${c.name.replace(/'/g,"\\'")}')">Открыть</button>
+        <button class="btn danger" onclick="deleteCampaign(event,'${c.id}')">×</button>
       </div>
     `;
     list.appendChild(card);
   });
 };
 
-const openSession = (id, name) => {
-  localStorage.setItem("active-session-id", id);
-  localStorage.setItem("active-session-name", name);
-  window.location.href = `/record.html`;
+const openCampaign = (id, name) => {
+  localStorage.setItem("active-campaign-id", id);
+  localStorage.setItem("active-campaign-name", name);
+  window.location.href = "/campaign.html";
 };
 
-const deleteSession = async (e, id) => {
+const deleteCampaign = async (e, id) => {
   e.stopPropagation();
-  if (!confirm("Удалить сессию и все её данные?")) return;
-  await api(`/api/sessions?id=${id}`, { method: "DELETE" });
-  loadSessions();
+  if (!confirm("Удалить кампанию и все её сессии?")) return;
+  await api(`/api/campaigns?id=${id}`, { method: "DELETE" });
+  loadCampaigns();
 };
 
-// New session modal
-$("btn-new").onclick = () => { $("modal").classList.add("open"); $("new-session-name").focus(); };
-$("modal-cancel").onclick = () => $("modal").classList.remove("open");
-$("modal-create").onclick = async () => {
-  const name = $("new-session-name").value.trim() || "Новая сессия";
-  const data = await api("/api/sessions", { method: "POST", body: JSON.stringify({ name }) });
-  $("modal").classList.remove("open");
-  $("new-session-name").value = "";
-  if (data.id) openSession(data.id, data.name);
+// Modal
+$("btn-new-campaign").onclick = () => { $("modal-campaign").classList.add("open"); $("new-campaign-name").focus(); };
+$("modal-campaign-cancel").onclick = () => $("modal-campaign").classList.remove("open");
+$("modal-campaign-create").onclick = async () => {
+  const name = $("new-campaign-name").value.trim() || "Новая кампания";
+  const description = $("new-campaign-desc").value.trim();
+  const data = await api("/api/campaigns", { method:"POST", body: JSON.stringify({ name, description }) });
+  $("modal-campaign").classList.remove("open");
+  $("new-campaign-name").value = "";
+  $("new-campaign-desc").value = "";
+  if (data.id) openCampaign(data.id, data.name);
 };
-$("new-session-name").onkeydown = e => { if (e.key === "Enter") $("modal-create").click(); };
+$("new-campaign-name").onkeydown = e => { if (e.key === "Enter") $("modal-campaign-create").click(); };
 </script>
 </body>
 </html>
