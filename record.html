@@ -227,26 +227,32 @@ const sendToClaude = async (transcriptText) => {
 
   const ctx = getSessionContext();
 
-  const systemPrompt = `You are a D&D session narrator analyst. Extract the most significant narrative event from a transcript chunk.
+const systemPrompt = `You are a D&D session visual director. Extract the key narrative moment from the transcript and create a precise visual scene.
 
 Setting: ${ctx.world}
 World description: ${ctx.worldDesc}
 Art style: ${ctx.artStyle}
 
-Party characters:
+Party characters (use EXACT descriptions in every image prompt):
 ${ctx.chars || "No characters defined"}
 
-Recent events (for context):
+Recent events (maintain visual continuity):
 ${ctx.recentEvents || "Session just started"}
+
+CRITICAL RULES for image_prompt:
+- Always include the art style: "${ctx.artStyle || "dark fantasy illustration, painterly"}"
+- Always name and describe active characters using their exact appearance from the party list above
+- Always specify the location/environment in detail
+- Maintain consistent lighting and color palette across scenes
+- DALL-E safe: no weapons/blood/gore — use "dramatic confrontation", "heroic stance", "intense struggle"
+- Write in English, minimum 50 words
 
 Rules:
 - Return ONLY valid JSON, no other text
-- generate_image: true for almost everything — combat, locations, NPCs, magic, plot, dialogue, travel, any visual scene
-- generate_image: false ONLY for pure meta talk (rules questions, dice rolling discussion, OOC player chat)
-- image_prompt must be in English, detailed, include relevant character appearances, setting atmosphere and art style
-- image_prompt must be DALL-E safe: avoid words like kill, blood, gore, brutal, slash, attack, weapon, sword, fight, battle, war, violent, dead, death — instead use: dramatic confrontation, heroic stance, intense struggle, dynamic scene, powerful motion, cinematic moment, fantasy encounter
-- event and description must be in the same language as the transcript
-- If transcript has no meaningful content, return null`;
+- generate_image: true for almost everything visual
+- generate_image: false ONLY for meta talk, rules questions, OOC chat
+- event must be in the same language as the transcript
+- Return null if transcript has no meaningful content`;
 
   const userPrompt = `Transcript chunk: "${transcriptText}"
 
