@@ -150,6 +150,7 @@ const $ = id => document.getElementById(id);
 
 // ── Session ───────────────────────────────────
 const SESSION_ID    = localStorage.getItem("active-session-id");
+const CAMPAIGN_ID   = localStorage.getItem("active-campaign-id");
 const SESSION_TOKEN = localStorage.getItem("sb-token");
 const SESSION_NAME  = localStorage.getItem("active-session-name") || "Сессия";
 
@@ -169,23 +170,22 @@ let sessionSettings = {};
 
 const loadSessionSettings = async () => {
   try {
-    const res = await fetch("/api/sessions", {
+    const res = await fetch("/api/campaigns", {
       headers: { "Authorization": `Bearer ${SESSION_TOKEN}` }
     });
-    const sessions = await res.json();
-    const session = Array.isArray(sessions) ? sessions.find(s => s.id === SESSION_ID) : null;
-    if (session?.settings) {
-      sessionSettings = session.settings;
-      // Apply saved recording params
+    const campaigns = await res.json();
+    const campaign = Array.isArray(campaigns) ? campaigns.find(c => c.id === CAMPAIGN_ID) : null;
+    if (campaign?.settings) {
+      sessionSettings = campaign.settings;
       if (sessionSettings.lang)  $("lang").value          = sessionSettings.lang;
       if (sessionSettings.chunk) $("chunk-sec").value     = sessionSettings.chunk;
       if (sessionSettings.vad)   $("vad-threshold").value = sessionSettings.vad;
       const charCount = (sessionSettings.characters || []).filter(c => c.name).length;
       $("settings-hint").textContent = charCount > 0
-        ? `✦ Загружено: ${sessionSettings.worldName || "мир"} · ${charCount} персонажей`
-        : "Настройки сессии не заполнены — перейди в Настройки";
+        ? `✦ ${sessionSettings.worldName || "мир"} · ${charCount} персонажей`
+        : "Настройки кампании не заполнены — перейди в Настройки";
     } else {
-      $("settings-hint").textContent = "Настройки сессии не заполнены — перейди в Настройки";
+      $("settings-hint").textContent = "Настройки кампании не заполнены — перейди в Настройки";
     }
   } catch(e) {
     $("settings-hint").textContent = "Не удалось загрузить настройки";
@@ -227,32 +227,26 @@ const sendToClaude = async (transcriptText) => {
 
   const ctx = getSessionContext();
 
-const systemPrompt = `You are a D&D session visual director. Extract the key narrative moment from the transcript and create a precise visual scene.
+  const systemPrompt = `You are a D&D session narrator analyst. Extract the most significant narrative event from a transcript chunk.
 
 Setting: ${ctx.world}
 World description: ${ctx.worldDesc}
 Art style: ${ctx.artStyle}
 
-Party characters (use EXACT descriptions in every image prompt):
+Party characters:
 ${ctx.chars || "No characters defined"}
 
-Recent events (maintain visual continuity):
+Recent events (for context):
 ${ctx.recentEvents || "Session just started"}
-
-CRITICAL RULES for image_prompt:
-- Always include the art style: "${ctx.artStyle || "dark fantasy illustration, painterly"}"
-- Always name and describe active characters using their exact appearance from the party list above
-- Always specify the location/environment in detail
-- Maintain consistent lighting and color palette across scenes
-- DALL-E safe: no weapons/blood/gore — use "dramatic confrontation", "heroic stance", "intense struggle"
-- Write in English, minimum 50 words
 
 Rules:
 - Return ONLY valid JSON, no other text
-- generate_image: true for almost everything visual
-- generate_image: false ONLY for meta talk, rules questions, OOC chat
-- event must be in the same language as the transcript
-- Return null if transcript has no meaningful content`;
+- generate_image: true for almost everything — combat, locations, NPCs, magic, plot, dialogue, travel, any visual scene
+- generate_image: false ONLY for pure meta talk (rules questions, dice rolling discussion, OOC player chat)
+- image_prompt must be in English, detailed, include relevant character appearances, setting atmosphere and art style
+- image_prompt must be DALL-E safe: avoid words like kill, blood, gore, brutal, slash, attack, weapon, sword, fight, battle, war, violent, dead, death — instead use: dramatic confrontation, heroic stance, intense struggle, dynamic scene, powerful motion, cinematic moment, fantasy encounter
+- event and description must be in the same language as the transcript
+- If transcript has no meaningful content, return null`;
 
   const userPrompt = `Transcript chunk: "${transcriptText}"
 

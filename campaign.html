@@ -48,6 +48,7 @@ body { font-family: monospace; background: #0d0d0d; color: #c9c9c9; min-height: 
   <span class="nav-campaign" id="nav-campaign"></span>
   <div class="nav-links">
     <a class="nav-link" href="/">← Кампании</a>
+    <a class="nav-link" href="/settings.html">Настройки кампании</a>
     <a class="nav-link" id="nav-viz-campaign" href="#">Визуал кампании</a>
   </div>
 </nav>
@@ -112,7 +113,7 @@ const loadSessions = async () => {
       <div class="card-actions">
         <button class="btn primary" onclick="openSession('${s.id}','${s.name.replace(/'/g,"\\'")}')">Запись</button>
         <button class="btn viz" onclick="openViz('${s.id}')">Визуал</button>
-        <button class="btn" onclick="openSettings('${s.id}','${s.name.replace(/'/g,"\\'")}')">⚙</button>
+        <button class="btn" onclick="openSessionSettings('${s.id}','${s.name.replace(/'/g,"\\'")}')">⚙</button>
         <button class="btn danger" onclick="deleteSession(event,'${s.id}')">×</button>
       </div>
     `;
@@ -126,7 +127,7 @@ const openSession = (id, name) => {
   window.location.href = "/record.html";
 };
 
-const openSettings = (id, name) => {
+const openSessionSettings = (id, name) => {
   localStorage.setItem("active-session-id", id);
   localStorage.setItem("active-session-name", name);
   window.location.href = "/settings.html";

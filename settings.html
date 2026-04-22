@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>DreamStory — Настройки сессии</title>
+<title>DreamStory — Настройки кампании</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: monospace; background: #0d0d0d; color: #c9c9c9; min-height: 100vh; }
@@ -12,7 +12,7 @@ body { font-family: monospace; background: #0d0d0d; color: #c9c9c9; min-height: 
 .nav-link { font-family:monospace; font-size:10px; letter-spacing:.08em; color:#444; text-decoration:none; padding:.3rem .7rem; border:1px solid transparent; border-radius:3px; transition:all .2s; white-space:nowrap; }
 .nav-link:hover { color:#c9c9c9; border-color:#2a2a2a; }
 .nav-link.active { color:#4caf72; border-color:#4caf7230; }
-.nav-session { font-size:11px; color:#333; padding:0 1.5rem; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.nav-campaign { font-size:11px; color:#333; padding:0 1.5rem; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .page { padding:1.75rem 1.5rem; max-width:780px; margin:0 auto; }
 .box { background:#181818; border:1px solid #2a2a2a; border-radius:6px; padding:1.25rem 1.5rem; margin-bottom:1rem; }
 .box-title { font-size:10px; letter-spacing:.12em; color:#444; margin-bottom:1rem; padding-bottom:.6rem; border-bottom:1px solid #1e1e1e; }
@@ -42,19 +42,18 @@ button.save:hover { background:#4caf7215; }
 .row { display:flex; align-items:center; gap:.75rem; margin-bottom:.75rem; }
 .row label { font-size:10px; letter-spacing:.08em; color:#555; flex-shrink:0; min-width:100px; }
 .row input { flex:1; margin-bottom:0; }
+.hint { font-size:11px; color:#3a3a3a; font-style:italic; margin-bottom:.5rem; }
 </style>
 </head>
 <body>
 
 <nav class="nav">
   <span class="nav-brand">✦ DREAMSTORY</span>
-  <span class="nav-session" id="session-name"></span>
+  <span class="nav-campaign" id="nav-campaign-name"></span>
   <div class="nav-links">
     <a class="nav-link" href="/">← Кампании</a>
-    <a class="nav-link" id="nav-campaign" href="/campaign.html">Сессии</a>
-    <a class="nav-link" href="/record.html">Запись</a>
-    <a class="nav-link active" href="/settings.html">Настройки</a>
-    <a class="nav-link" id="nav-viz" href="/viz.html">Визуализация</a>
+    <a class="nav-link" href="/campaign.html">Сессии</a>
+    <a class="nav-link active" href="/settings.html">Настройки кампании</a>
   </div>
 </nav>
 
@@ -62,6 +61,7 @@ button.save:hover { background:#4caf7215; }
 
   <div class="box">
     <div class="box-title">МИР И СЕТТИНГ</div>
+    <p class="hint">Эти настройки общие для всей кампании — попадают в каждую сессию автоматически.</p>
     <label class="field-label">НАЗВАНИЕ МИРА / КАМПАНИИ</label>
     <input type="text" id="s-world-name" placeholder="Forgotten Realms, Curse of Strahd..." />
     <label class="field-label">ОПИСАНИЕ СЕТТИНГА</label>
@@ -71,7 +71,7 @@ button.save:hover { background:#4caf7215; }
   </div>
 
   <div class="box">
-    <div class="box-title">ПАРАМЕТРЫ ЗАПИСИ</div>
+    <div class="box-title">ПАРАМЕТРЫ ЗАПИСИ ПО УМОЛЧАНИЮ</div>
     <div class="row"><label>Язык Whisper</label><input type="text" id="s-lang" value="ru" style="max-width:80px;" /></div>
     <div class="row"><label>Чанк (сек)</label><input type="text" id="s-chunk" value="30" style="max-width:80px;" /></div>
     <div class="row"><label>VAD порог</label><input type="text" id="s-vad" value="10" style="max-width:80px;" /></div>
@@ -79,6 +79,7 @@ button.save:hover { background:#4caf7215; }
 
   <div class="box">
     <div class="box-title">ПЕРСОНАЖИ ПАРТИИ</div>
+    <p class="hint">Описания внешности попадают в каждый image prompt для консистентности визуала.</p>
     <div class="char-grid" id="char-grid"></div>
   </div>
 
@@ -93,22 +94,20 @@ button.save:hover { background:#4caf7215; }
 
 <script>
 const $ = id => document.getElementById(id);
-const SESSION_ID = localStorage.getItem("active-session-id");
-const SESSION_TOKEN = localStorage.getItem("sb-token");
-const SESSION_NAME = localStorage.getItem("active-session-name") || "Сессия";
+const CAMPAIGN_ID   = localStorage.getItem("active-campaign-id");
+const CAMPAIGN_NAME = localStorage.getItem("active-campaign-name") || "Кампания";
+const SESSION_ID    = localStorage.getItem("active-session-id");
+const TOKEN         = localStorage.getItem("sb-token");
 
-if (!SESSION_ID || !SESSION_TOKEN) window.location.href = "/";
+if (!CAMPAIGN_ID || !TOKEN) window.location.href = "/";
 
-$("session-name").textContent = SESSION_NAME;
-const vizLink = $("nav-viz");
-if (vizLink) vizLink.href = `/viz.html?session=${SESSION_ID}`;
+$("nav-campaign-name").textContent = CAMPAIGN_NAME;
 
 const api = (path, opts = {}) => fetch(path, {
   ...opts,
-  headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SESSION_TOKEN}`, ...(opts.headers||{}) },
+  headers: { "Content-Type": "application/json", "Authorization": `Bearer ${TOKEN}`, ...(opts.headers||{}) },
 }).then(r => r.json());
 
-// Build char cards
 const buildCharCards = (chars) => {
   const grid = $("char-grid");
   grid.innerHTML = "";
@@ -130,7 +129,6 @@ const buildCharCards = (chars) => {
     card.appendChild(makeField("ИМЯ", `c${i}-name`, "text", "Имя персонажа", ch.name));
     card.appendChild(makeField("КЛАСС / РАСА", `c${i}-race`, "text", "Паладин, человек", ch.race));
     card.appendChild(makeField("ОПИСАНИЕ ВНЕШНОСТИ", `c${i}-appearance`, "textarea", "Внешность для image prompt...", ch.appearance));
-    // Art
     const artWrap = document.createElement("div"); artWrap.className = "char-field";
     const artLbl = document.createElement("label"); artLbl.textContent = "РЕФЕРЕНС-АРТ";
     artWrap.appendChild(artLbl);
@@ -157,11 +155,11 @@ const buildCharCards = (chars) => {
   });
 };
 
-// Load settings from Supabase
+// Load from campaign
 const loadSettings = async () => {
-  const data = await api(`/api/sessions`);
-  const session = Array.isArray(data) ? data.find(s => s.id === SESSION_ID) : null;
-  const s = session?.settings || {};
+  const data = await api("/api/campaigns");
+  const campaign = Array.isArray(data) ? data.find(c => c.id === CAMPAIGN_ID) : null;
+  const s = campaign?.settings || {};
   $("s-world-name").value = s.worldName || "";
   $("s-world-desc").value = s.worldDesc || "";
   $("s-art-style").value  = s.artStyle  || "";
@@ -171,7 +169,7 @@ const loadSettings = async () => {
   buildCharCards(s.characters || Array(4).fill({name:"",race:"",appearance:"",art:""}));
 };
 
-// Save settings to Supabase
+// Save to campaign
 $("btn-save").onclick = async () => {
   const settings = {
     worldName: $("s-world-name").value,
@@ -187,8 +185,9 @@ $("btn-save").onclick = async () => {
       art:        document.getElementById(`c${i}-art`)?.dataset?.src||"",
     })),
   };
-  await api(`/api/sessions?id=${SESSION_ID}`, {
+  await fetch(`/api/campaigns?id=${CAMPAIGN_ID}`, {
     method: "PATCH",
+    headers: { "Content-Type":"application/json", "Authorization": `Bearer ${TOKEN}` },
     body: JSON.stringify({ settings }),
   });
   const st = $("save-status"); st.style.opacity=1;
