@@ -53,11 +53,11 @@ export default async function handler(req, res) {
     const body = await getBody(req);
     const { data, error } = await sb
       .from("campaigns")
-      .update({ name: body.name, description: body.description })
+      .update({ name: body.name, description: body.description, settings: body.settings })
       .eq("id", id).eq("user_id", user.id)
-      .select().single();
+      .select();
     if (error) return res.status(500).json({ error: error.message });
-    return res.status(200).json(data);
+    return res.status(200).json(data?.[0] || {});
   }
 
   if (req.method === "DELETE") {
