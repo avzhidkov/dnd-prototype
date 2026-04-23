@@ -175,6 +175,7 @@ const loadCampaigns = async () => {
       </div>
       <div class="card-actions">
         <button class="btn primary" onclick="openCampaign('${c.id}','${c.name.replace(/'/g,"\\'")}')">Открыть</button>
+        <button class="btn" onclick="openCampaignSettings(event,'${c.id}','${c.name.replace(/'/g,"\\'")}')">⚙</button>
         <button class="btn danger" onclick="deleteCampaign(event,'${c.id}')">×</button>
       </div>
     `;
