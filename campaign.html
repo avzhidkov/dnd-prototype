@@ -113,7 +113,6 @@ const loadSessions = async () => {
       <div class="card-actions">
         <button class="btn primary" onclick="openSession('${s.id}','${s.name.replace(/'/g,"\\'")}')">Запись</button>
         <button class="btn viz" onclick="openViz('${s.id}')">Визуал</button>
-        <button class="btn" onclick="openSessionSettings('${s.id}','${s.name.replace(/'/g,"\\'")}')">⚙</button>
         <button class="btn danger" onclick="deleteSession(event,'${s.id}')">×</button>
       </div>
     `;
