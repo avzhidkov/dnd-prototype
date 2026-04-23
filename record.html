@@ -21,11 +21,15 @@ body { font-family: monospace; background: #0d0d0d; color: #c9c9c9; min-height: 
 label { font-size:12px; color:#666; flex-shrink:0; min-width:90px; }
 input[type=text], input[type=password] { flex:1; background:#111; border:1px solid #222; border-radius:3px; padding:.45rem .75rem; color:#ccc; font-family:monospace; font-size:12px; outline:none; transition:border-color .2s; }
 input:focus { border-color:#4a8fcc; }
+textarea { width:100%; background:#111; border:1px solid #222; border-radius:3px; padding:.6rem .75rem; color:#ccc; font-family:monospace; font-size:12px; outline:none; resize:vertical; line-height:1.6; transition:border-color .2s; }
+textarea:focus { border-color:#4a8fcc; }
 button { font-family:monospace; font-size:11px; letter-spacing:.1em; padding:.5rem 1.1rem; border:1px solid #333; background:transparent; color:#777; cursor:pointer; border-radius:3px; transition:all .2s; }
 button:hover:not(:disabled) { border-color:#4caf72; color:#4caf72; }
 button:disabled { opacity:.3; cursor:default; }
 button.stop { border-color:#c0504040; color:#c05040; }
 button.stop:hover:not(:disabled) { background:#c0504015; }
+button.primary { border-color:#4caf7260; color:#4caf72; }
+button.primary:hover:not(:disabled) { background:#4caf7215; }
 .dot { width:8px; height:8px; border-radius:50%; background:#2a2a2a; transition:background .3s; flex-shrink:0; }
 .dot.on { background:#4caf72; box-shadow:0 0 6px #4caf7280; }
 .dot.err { background:#c05040; }
@@ -72,6 +76,14 @@ button.stop:hover:not(:disabled) { background:#c0504015; }
 .img-badge { font-size:10px; color:#4caf72; letter-spacing:.06em; }
 .no-events { color:#333; font-style:italic; font-size:12px; text-align:center; padding:1.5rem 0; }
 .settings-hint { font-size:11px; color:#333; font-style:italic; }
+.field-label { font-size:10px; letter-spacing:.08em; color:#555; display:block; margin-bottom:.35rem; }
+.ws-grid { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
+@media(max-width:600px){ .ws-grid { grid-template-columns:1fr; } }
+.ws-field { display:flex; flex-direction:column; gap:.3rem; }
+.ws-field label { font-size:10px; letter-spacing:.08em; color:#555; }
+.ws-field input { width:100%; }
+.ws-val { font-size:11px; color:#4a8fcc; font-style:italic; min-height:16px; }
+.briefing-actions { display:flex; gap:.75rem; align-items:center; margin-top:.5rem; }
 </style>
 </head>
 <body>
@@ -90,8 +102,9 @@ button.stop:hover:not(:disabled) { background:#c0504015; }
 
 <div class="page">
 
+  <!-- API ключи -->
   <div class="box">
-    <div class="box-title">КЛЮЧИ API</div>
+    <div class="box-title">ПАРАМЕТРЫ</div>
     <div class="row"><label>OpenAI</label><input type="password" id="openai-key" placeholder="sk-..." /></div>
     <div class="row">
       <label>Язык</label>
@@ -101,9 +114,47 @@ button.stop:hover:not(:disabled) { background:#c0504015; }
       <label style="min-width:unset;">VAD порог</label>
       <input type="text" id="vad-threshold" value="10" style="max-width:60px;" />
     </div>
-    <div class="row"><span class="settings-hint" id="settings-hint">Загружаю настройки сессии...</span></div>
+    <div class="row"><span class="settings-hint" id="settings-hint">Загружаю настройки...</span></div>
   </div>
 
+  <!-- World State + Pre-session briefing -->
+  <div class="box">
+    <div class="box-title">СОСТОЯНИЕ МИРА ПЕРЕД СЕССИЕЙ</div>
+
+    <div class="ws-grid" style="margin-bottom:.85rem;">
+      <div class="ws-field">
+        <label>ТЕКУЩАЯ ЛОКАЦИЯ</label>
+        <input type="text" id="ws-location" placeholder="Подвал особняка Вольфа..." />
+        <span class="ws-val" id="ws-location-auto"></span>
+      </div>
+      <div class="ws-field">
+        <label>ТЕКУЩАЯ УГРОЗА / НАПРЯЖЕНИЕ</label>
+        <input type="text" id="ws-threat" placeholder="Некромант где-то в подвале..." />
+      </div>
+    </div>
+
+    <div style="margin-bottom:.85rem;">
+      <label class="field-label">ЧТО ПРОИЗОШЛО В ПРОШЛОЙ СЕССИИ (кратко)</label>
+      <textarea id="ws-prev-summary" rows="2" placeholder="Партия нашла дневник графа. Сигурд ранен зомби. Обнаружен тайный алтарь..."></textarea>
+    </div>
+
+    <div style="margin-bottom:.85rem;">
+      <label class="field-label">АКТИВНЫЕ NPC РЯДОМ С ПАРТИЕЙ</label>
+      <input type="text" id="ws-npcs" placeholder="Граф Алекс (пленник), Слуга Борис (мёртв)..." />
+    </div>
+
+    <div>
+      <label class="field-label">ЗАМЕТКИ ДМ / ОСОБЫЕ УСЛОВИЯ ЭТОЙ СЕССИИ</label>
+      <textarea id="ws-dm-notes" rows="2" placeholder="Сегодня финальная битва. Партия истощена, у Сигурда осталось 8 HP..."></textarea>
+    </div>
+
+    <div class="briefing-actions">
+      <button class="primary" id="btn-save-briefing">Сохранить контекст</button>
+      <span style="font-size:11px;color:#333;font-style:italic;" id="briefing-saved"></span>
+    </div>
+  </div>
+
+  <!-- Статус -->
   <div class="box">
     <div class="box-title">СТАТУС</div>
     <div class="row"><span style="font-size:12px;color:#555;">Вкладка</span><div class="dot" id="dot-tab"></div></div>
@@ -120,6 +171,7 @@ button.stop:hover:not(:disabled) { background:#c0504015; }
     </div>
   </div>
 
+  <!-- Статистика -->
   <div class="box">
     <div class="box-title">СТАТИСТИКА</div>
     <div class="stat-row"><span>Чанков / событий</span><span class="stat-val"><span id="s-chunks">0</span> / <span id="s-events">0</span></span></div>
@@ -128,16 +180,19 @@ button.stop:hover:not(:disabled) { background:#c0504015; }
     <div class="stat-row"><span>Стоимость GPT-4o (est.)</span><span class="stat-val" id="s-cost-c">$0.000</span></div>
   </div>
 
+  <!-- Транскрипт -->
   <div class="box">
     <div class="box-title">ТРАНСКРИПТ</div>
     <div class="transcript" id="transcript"><span class="empty">Здесь появится текст...</span></div>
   </div>
 
+  <!-- События -->
   <div class="box">
     <div class="box-title">СОБЫТИЯ <span id="events-count" style="color:#333;font-size:10px;"></span></div>
     <div class="events-list" id="events-list"><div class="no-events">Событий пока нет...</div></div>
   </div>
 
+  <!-- Лог -->
   <div class="box">
     <div class="box-title">ЛОГ</div>
     <div class="log-box" id="log"></div>
@@ -165,14 +220,18 @@ const savedKey = localStorage.getItem("openai-key");
 if (savedKey) $("openai-key").value = savedKey;
 $("openai-key").addEventListener("input", e => localStorage.setItem("openai-key", e.target.value.trim()));
 
-// ── Session settings (from Supabase) ──────────
+// ── Supabase helpers ──────────────────────────
+const sbFetch = (path, opts = {}) => fetch(path, {
+  ...opts,
+  headers: { "Content-Type":"application/json", "Authorization":`Bearer ${SESSION_TOKEN}`, ...(opts.headers||{}) },
+});
+
+// ── Campaign settings ─────────────────────────
 let sessionSettings = {};
 
 const loadSessionSettings = async () => {
   try {
-    const res = await fetch("/api/campaigns", {
-      headers: { "Authorization": `Bearer ${SESSION_TOKEN}` }
-    });
+    const res = await sbFetch("/api/campaigns");
     const campaigns = await res.json();
     const campaign = Array.isArray(campaigns) ? campaigns.find(c => c.id === CAMPAIGN_ID) : null;
     if (campaign?.settings) {
@@ -192,34 +251,127 @@ const loadSessionSettings = async () => {
   }
 };
 
-loadSessionSettings();
+// ── World State ───────────────────────────────
+const worldState = {
+  currentLocation: "",
+  currentThreat: "",
+  activeNPCs: "",
+  prevSummary: "",
+  dmNotes: "",
+  recentEvents: [],
+};
+
+const loadWorldState = async () => {
+  try {
+    // Загружаем последний world state сессии
+    const res = await sbFetch(`/api/world-state?session_id=${SESSION_ID}`);
+    const data = await res.json();
+    if (data?.state) {
+      const s = data.state;
+      worldState.currentLocation = s.currentLocation || "";
+      worldState.currentThreat   = s.currentThreat   || "";
+      worldState.activeNPCs      = s.activeNPCs      || "";
+      worldState.prevSummary     = s.prevSummary     || "";
+      worldState.dmNotes         = s.dmNotes         || "";
+      worldState.recentEvents    = s.recentEvents    || [];
+      // Заполняем поля
+      $("ws-location").value    = worldState.currentLocation;
+      $("ws-threat").value      = worldState.currentThreat;
+      $("ws-npcs").value        = worldState.activeNPCs;
+      $("ws-prev-summary").value = worldState.prevSummary;
+      $("ws-dm-notes").value    = worldState.dmNotes;
+      if (worldState.currentLocation) {
+        $("ws-location-auto").textContent = `↑ из прошлой сессии`;
+      }
+    }
+  } catch(e) { console.error("World state load error:", e); }
+};
+
+const saveWorldState = async () => {
+  // Читаем из полей
+  worldState.currentLocation = $("ws-location").value.trim();
+  worldState.currentThreat   = $("ws-threat").value.trim();
+  worldState.activeNPCs      = $("ws-npcs").value.trim();
+  worldState.prevSummary     = $("ws-prev-summary").value.trim();
+  worldState.dmNotes         = $("ws-dm-notes").value.trim();
+
+  try {
+    await sbFetch("/api/world-state", {
+      method: "POST",
+      body: JSON.stringify({ session_id: SESSION_ID, state: worldState }),
+    });
+  } catch(e) { console.error("World state save error:", e); }
+};
+
+const updateWorldStateFromEvent = async (event) => {
+  // Обновляем локацию только если она изменилась
+  if (event.location && event.location_changed !== false) {
+    worldState.currentLocation = event.location;
+    $("ws-location").value = event.location;
+    $("ws-location-auto").textContent = `↑ обновлено автоматически`;
+  }
+  // Добавляем событие в память
+  worldState.recentEvents.push({
+    type: event.type,
+    event: event.event,
+    location: event.location || worldState.currentLocation,
+  });
+  // Держим последние 10
+  if (worldState.recentEvents.length > 10) worldState.recentEvents.shift();
+
+  // Сохраняем снапшот каждые 5 событий
+  if (worldState.recentEvents.length % 5 === 0) {
+    await saveWorldState();
+    log("World state сохранён", "ok");
+  }
+};
+
+$("btn-save-briefing").onclick = async () => {
+  await saveWorldState();
+  $("briefing-saved").textContent = "Сохранено ✓";
+  setTimeout(() => { $("briefing-saved").textContent = ""; }, 2500);
+};
 
 // ── Narrative context ─────────────────────────
-const narrativeContext = { events: [] };
-
 const getSessionContext = () => {
   const s = sessionSettings;
   const chars = (s.characters || []).filter(c => c.name).map(c =>
     `- ${c.name} (${c.race||"unknown"}): ${c.appearance||"no description"}`
   ).join("\n");
-  const recentEvents = narrativeContext.events.slice(-6).map(e =>
-    `[${e.type}] ${e.event}`
+  const recentEvents = worldState.recentEvents.slice(-6).map(e =>
+    `[${e.type}] ${e.event}${e.location ? ` (локация: ${e.location})` : ""}`
   ).join("\n");
   const charArts = (s.characters || []).filter(c => c.name && c.art).map(c => ({
     name: c.name, art: c.art
   }));
   return {
-    world:        s.worldName  || "Unknown world",
-    worldDesc:    s.worldDesc  || "",
-    artStyle:     s.artStyle   || "fantasy illustration",
+    world:           s.worldName    || "Unknown world",
+    worldDesc:       s.worldDesc    || "",
+    artStyle:        s.artStyle     || "fantasy illustration",
+    currentLocation: worldState.currentLocation || "unknown",
+    currentThreat:   worldState.currentThreat   || "",
+    activeNPCs:      worldState.activeNPCs       || "",
+    prevSummary:     worldState.prevSummary      || "",
+    dmNotes:         worldState.dmNotes          || "",
     chars, recentEvents, charArts,
   };
+};
+
+// ── Save transcript ───────────────────────────
+const saveTranscript = async (text, chunkNum) => {
+  if (!SESSION_ID || !SESSION_TOKEN) return;
+  try {
+    await sbFetch("/api/transcripts", {
+      method: "POST",
+      body: JSON.stringify({ session_id: SESSION_ID, chunk_num: chunkNum, text }),
+    });
+  } catch(e) { console.error("Transcript save error:", e); }
 };
 
 // ── GPT-4o ────────────────────────────────────
 let eventsCount = 0;
 
-const sendToClaude = async (transcriptText) => {
+const sendToClaude = async (transcriptText, chunkNum) => {
   const key = $("openai-key").value.trim();
   if (!key) { log("OpenAI ключ не введён","err"); return; }
   dot("claude","busy");
@@ -227,38 +379,57 @@ const sendToClaude = async (transcriptText) => {
 
   const ctx = getSessionContext();
 
-  const systemPrompt = `You are a D&D session narrator analyst. Extract the most significant narrative event from a transcript chunk.
+  const systemPrompt = `You are a D&D session visual narrator. Extract the key narrative event from a transcript and create a precise, consistent visual scene.
 
+=== WORLD ===
 Setting: ${ctx.world}
-World description: ${ctx.worldDesc}
+Description: ${ctx.worldDesc}
 Art style: ${ctx.artStyle}
 
-Party characters:
+=== CURRENT STATE ===
+Current location: ${ctx.currentLocation}
+Current threat: ${ctx.currentThreat || "none"}
+Active NPCs nearby: ${ctx.activeNPCs || "none"}
+DM notes: ${ctx.dmNotes || "none"}
+
+=== PARTY (always include relevant characters in image_prompt) ===
 ${ctx.chars || "No characters defined"}
 
-Recent events (for context):
+=== PREVIOUS SESSION SUMMARY ===
+${ctx.prevSummary || "First session"}
+
+=== RECENT EVENTS (maintain continuity) ===
 ${ctx.recentEvents || "Session just started"}
 
-Rules:
-- Return ONLY valid JSON, no other text
-- generate_image: true for almost everything — combat, locations, NPCs, magic, plot, dialogue, travel, any visual scene
-- generate_image: false ONLY for pure meta talk (rules questions, dice rolling discussion, OOC player chat)
-- image_prompt must be in English, detailed, include relevant character appearances, setting atmosphere and art style
-- image_prompt must be DALL-E safe: avoid words like kill, blood, gore, brutal, slash, attack, weapon, sword, fight, battle, war, violent, dead, death — instead use: dramatic confrontation, heroic stance, intense struggle, dynamic scene, powerful motion, cinematic moment, fantasy encounter
-- event and description must be in the same language as the transcript
-- If transcript has no meaningful content, return null`;
+=== RULES ===
+- Return ONLY valid JSON, no other text, no markdown
+- location: where the action happens — use current location if not explicitly changed
+- location_changed: true ONLY if party explicitly moved to a new place
+- generate_image: true for almost everything visual
+- generate_image: false ONLY for meta talk, rules questions, OOC chat
+- image_prompt: English, minimum 60 words, MUST include:
+  1. Exact location description matching current_location
+  2. Art style: "${ctx.artStyle}"
+  3. Atmosphere and lighting
+  4. All relevant party characters with their EXACT appearance from party list
+- DALL-E safe: no kill/blood/gore/weapon/war — use: dramatic confrontation, heroic stance, intense struggle
+- event must be in the same language as the transcript
+- Return null if transcript has no meaningful content`;
 
-  const userPrompt = `Transcript chunk: "${transcriptText}"
+  const userPrompt = `Transcript: "${transcriptText}"
 
-Return a single JSON object:
+Return JSON:
 {
   "event": "one sentence summary",
   "type": "combat|dialogue|discovery|travel|magic|plot|other",
-  "characters": ["names from party or NPCs mentioned"],
-  "generate_image": true or false,
-  "image_prompt": "detailed scene for DALL-E, English only"
+  "characters": ["party members or NPCs mentioned"],
+  "location": "current location name",
+  "location_changed": false,
+  "importance": 1-3,
+  "generate_image": true/false,
+  "image_prompt": "detailed English scene, min 60 words"
 }
-Or return null if nothing significant happened.`;
+Or null.`;
 
   try {
     const res = await fetch("/api/claude", {
@@ -266,7 +437,7 @@ Or return null if nothing significant happened.`;
       headers: { "Content-Type":"application/json", "x-openai-key": key },
       body: JSON.stringify({
         model: "gpt-4o",
-        max_tokens: 600,
+        max_tokens: 800,
         messages: [
           { role:"system", content: systemPrompt },
           { role:"user",   content: userPrompt },
@@ -283,9 +454,10 @@ Or return null if nothing significant happened.`;
     const event = JSON.parse(raw.replace(/```json|```/g,"").trim());
     if (!event?.event) { dot("claude","on"); return; }
 
-    narrativeContext.events.push(event);
-    eventsCount++;
+    // Обновляем world state
+    await updateWorldStateFromEvent(event);
 
+    eventsCount++;
     const tokenEst = (systemPrompt.length + userPrompt.length + raw.length) / 4;
     const costEst = parseFloat($("s-cost-c").textContent.replace("$","")) + (tokenEst / 1000000 * 3);
     $("s-cost-c").textContent = "$" + costEst.toFixed(4);
@@ -294,7 +466,7 @@ Or return null if nothing significant happened.`;
 
     addEventCard(event);
     dot("claude","on");
-    log(`Событие: [${event.type}] ${event.event}`, "ok");
+    log(`[${event.location||ctx.currentLocation}] ${event.event}`, "ok");
 
     if (event.generate_image) {
       try {
@@ -325,6 +497,7 @@ const addEventCard = (event) => {
       </div>
     </div>
     <div class="event-desc">${event.event}</div>
+    ${event.location ? `<div style="font-size:10px;color:#3a5a8a;margin-top:.3rem;">◉ ${event.location}</div>` : ""}
     ${(event.characters||[]).length ? `<div class="event-chars">${event.characters.map(c=>`<span class="event-char">${c}</span>`).join("")}</div>` : ""}
     ${event.generate_image && event.image_prompt ? `<div class="event-prompt">prompt: ${event.image_prompt}</div>` : ""}
   `;
@@ -387,7 +560,10 @@ const sendToWhisper = async (blob, chunkNum) => {
     setStat("s-cost-w","$"+(totalMinutes*0.006).toFixed(3));
     log(`Whisper ✓ чанк ${chunkNum}`, "ok");
     dot("wh","on");
-    if (text !== "[тишина]" && text.length > 20) sendToClaude(text);
+    if (text !== "[тишина]" && text.length > 20) {
+      saveTranscript(text, chunkNum); // сохраняем в БД
+      sendToClaude(text, chunkNum);
+    }
   } catch(e) { log("Fetch error: "+e.message,"err"); dot("wh","err"); }
 };
 
@@ -408,6 +584,9 @@ const setupMeter = (stream, fillId, valId) => {
 };
 
 $("btn-start").onclick = async () => {
+  // Сохраняем briefing перед стартом
+  await saveWorldState();
+
   $("btn-start").disabled=true; stopping=false;
   log("Запрашиваю вкладку...");
   let tabStream;
@@ -464,16 +643,22 @@ $("btn-start").onclick = async () => {
   tabStream.getAudioTracks().forEach(t=>t.onended=()=>{ log("Захват прерван","err"); stopAll(); });
 };
 
-const stopAll=()=>{
+const stopAll = async () => {
   stopping=true;
   if(recorder?.state!=="inactive") recorder?.stop();
   audioCtx?.close();
   clearInterval(timerInterval);
   dot("tab",""); dot("mic",""); dot("rec","");
   $("btn-stop").disabled=true; $("btn-start").disabled=false;
-  log("Остановлено");
+  // Сохраняем финальный world state
+  await saveWorldState();
+  log("Остановлено — world state сохранён");
 };
-$("btn-stop").onclick=stopAll;
+$("btn-stop").onclick = stopAll;
+
+// ── Init ──────────────────────────────────────
+loadSessionSettings();
+loadWorldState();
 </script>
 </body>
 </html>
