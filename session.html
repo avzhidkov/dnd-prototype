@@ -141,7 +141,16 @@ button.viz:hover { background:#c084f015; }
       <div class="empty">Загрузка...</div>
     </div>
   </div>
-
+<!-- Резюме -->
+  <div class="box">
+    <div class="box-title">
+      РЕЗЮМЕ СЕССИИ
+      <button style="font-size:10px;padding:.2rem .6rem;" id="btn-generate-summary">✦ Сгенерировать</button>
+    </div>
+    <div id="summary-content" style="font-size:13px;color:#666;line-height:1.8;font-style:italic;">
+      Резюме не создано. Нажми кнопку чтобы сгенерировать.
+    </div>
+  </div>
   <!-- Транскрипты -->
   <div class="box" id="transcripts-box">
     <div class="box-title">
@@ -304,6 +313,46 @@ $("btn-toggle-transcripts").onclick = () => {
   }
 };
 
+// Summary
+const loadSummary = async () => {
+  const data = await sbFetch(`/api/summaries?session_id=${SESSION_ID}`);
+  if (data?.summary) {
+    $("summary-content").style.fontStyle = "normal";
+    $("summary-content").style.color = "#aaa";
+    $("summary-content").innerHTML = data.summary.replace(/\n/g, "<br>");
+  }
+};
+
+$("btn-generate-summary").onclick = async () => {
+  const key = localStorage.getItem("openai-key");
+  if (!key) { alert("Введи OpenAI ключ на странице Записи"); return; }
+  const btn = $("btn-generate-summary");
+  btn.textContent = "Генерирую...";
+  btn.disabled = true;
+  try {
+    const res = await fetch(`/api/summaries`, {
+      method: "POST",
+      headers: { "Content-Type":"application/json", "Authorization":`Bearer ${SESSION_TOKEN}`, "x-openai-key": key },
+      body: JSON.stringify({ session_id: SESSION_ID }),
+    });
+    const data = await res.json();
+    if (data?.summary) {
+      $("summary-content").style.fontStyle = "normal";
+      $("summary-content").style.color = "#aaa";
+      $("summary-content").innerHTML = data.summary.replace(/\n/g, "<br>");
+      btn.textContent = "✦ Обновить";
+    } else {
+      alert("Ошибка: " + (data.error || "unknown"));
+      btn.textContent = "✦ Сгенерировать";
+    }
+  } catch(e) {
+    alert("Ошибка: " + e.message);
+    btn.textContent = "✦ Сгенерировать";
+  }
+  btn.disabled = false;
+};
+
+loadSummary();
 loadAll();
 </script>
 </body>

@@ -263,7 +263,6 @@ const worldState = {
 
 const loadWorldState = async () => {
   try {
-    // Загружаем последний world state сессии
     const res = await sbFetch(`/api/world-state?session_id=${SESSION_ID}`);
     const data = await res.json();
     if (data?.state) {
@@ -274,17 +273,28 @@ const loadWorldState = async () => {
       worldState.prevSummary     = s.prevSummary     || "";
       worldState.dmNotes         = s.dmNotes         || "";
       worldState.recentEvents    = s.recentEvents    || [];
-      // Заполняем поля
-      $("ws-location").value    = worldState.currentLocation;
-      $("ws-threat").value      = worldState.currentThreat;
-      $("ws-npcs").value        = worldState.activeNPCs;
+      $("ws-location").value     = worldState.currentLocation;
+      $("ws-threat").value       = worldState.currentThreat;
+      $("ws-npcs").value         = worldState.activeNPCs;
       $("ws-prev-summary").value = worldState.prevSummary;
-      $("ws-dm-notes").value    = worldState.dmNotes;
+      $("ws-dm-notes").value     = worldState.dmNotes;
       if (worldState.currentLocation) {
         $("ws-location-auto").textContent = `↑ из прошлой сессии`;
       }
     }
   } catch(e) { console.error("World state load error:", e); }
+
+  // Загружаем резюме прошлых сессий кампании
+  try {
+    const summRes = await sbFetch(`/api/summaries?campaign_id=${CAMPAIGN_ID}`);
+    if (Array.isArray(summRes) && summRes.length > 0) {
+      const allSummaries = summRes
+        .map(s => `=== ${s.sessions?.name || "Сессия"} ===\n${s.summary}`)
+        .join("\n\n");
+      worldState.prevSummary = allSummaries;
+      $("ws-prev-summary").value = allSummaries;
+    }
+  } catch(e) { console.error("Summaries load error:", e); }
 };
 
 const saveWorldState = async () => {
