@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>DreamStory — Сессия</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: monospace; background: #0d0d0d; color: #c9c9c9; min-height: 100vh; }
+.nav { display:flex; align-items:center; background:#111; border-bottom:1px solid #1e1e1e; padding:0 1.5rem; height:46px; position:sticky; top:0; z-index:10; }
+.nav-brand { font-size:12px; letter-spacing:.18em; color:#4caf72; flex-shrink:0; }
+.nav-session { font-size:11px; color:#333; flex:1; padding:0 1.5rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.nav-links { display:flex; align-items:center; gap:.25rem; flex-shrink:0; }
+.nav-link { font-family:monospace; font-size:10px; letter-spacing:.08em; color:#444; text-decoration:none; padding:.3rem .7rem; border:1px solid transparent; border-radius:3px; transition:all .2s; white-space:nowrap; }
+.nav-link:hover { color:#c9c9c9; border-color:#2a2a2a; }
+.nav-link.active { color:#4caf72; border-color:#4caf7230; }
+.page { padding:1.75rem 1.5rem; max-width:900px; margin:0 auto; }
+.box { background:#181818; border:1px solid #2a2a2a; border-radius:6px; padding:1.25rem 1.5rem; margin-bottom:1rem; }
+.box-title { font-size:10px; letter-spacing:.12em; color:#444; margin-bottom:1rem; padding-bottom:.6rem; border-bottom:1px solid #1e1e1e; display:flex; align-items:center; justify-content:space-between; }
+button { font-family:monospace; font-size:11px; letter-spacing:.1em; padding:.5rem 1.1rem; border:1px solid #333; background:transparent; color:#777; cursor:pointer; border-radius:3px; transition:all .2s; }
+button:hover { border-color:#4caf72; color:#4caf72; }
+button.primary { border-color:#4caf7260; color:#4caf72; }
+button.primary:hover { background:#4caf7215; }
+button.viz { border-color:#c084f040; color:#c084f0; }
+button.viz:hover { background:#c084f015; }
+
+/* Stats */
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:.75rem; }
+@media(max-width:600px){ .stats-grid { grid-template-columns:repeat(2,1fr); } }
+.stat-card { background:#131313; border:1px solid #222; border-radius:4px; padding:.85rem 1rem; }
+.stat-label { font-size:10px; letter-spacing:.08em; color:#444; margin-bottom:.35rem; }
+.stat-value { font-size:20px; font-weight:bold; color:#c9c9c9; }
+.stat-sub { font-size:10px; color:#333; margin-top:.2rem; }
+
+/* Actions */
+.actions-row { display:flex; gap:.75rem; flex-wrap:wrap; }
+
+/* World state */
+.ws-grid { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
+@media(max-width:600px){ .ws-grid { grid-template-columns:1fr; } }
+.ws-item { background:#131313; border:1px solid #1e1e1e; border-radius:4px; padding:.75rem 1rem; }
+.ws-item-label { font-size:10px; letter-spacing:.08em; color:#444; margin-bottom:.3rem; }
+.ws-item-value { font-size:12px; color:#888; line-height:1.6; }
+
+/* Timeline */
+.timeline { position:relative; padding-left:1.5rem; }
+.timeline::before { content:''; position:absolute; left:5px; top:4px; bottom:0; width:1px; background:linear-gradient(to bottom,#2a2a2a,transparent); }
+.ev-node { position:relative; margin-bottom:1.25rem; }
+.ev-pip { position:absolute; left:-1.35rem; top:.7rem; width:11px; height:11px; border-radius:50%; border:2px solid; background:#0d0d0d; flex-shrink:0; }
+.ev-card { background:#131313; border:1px solid #222; border-radius:4px; padding:.85rem 1rem; transition:border-color .2s; }
+.ev-card:hover { border-color:#2a2a2a; }
+.ev-card.has-image { border-color:#4caf7220; }
+.ev-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:.5rem; flex-wrap:wrap; gap:.5rem; }
+.ev-type { font-size:10px; letter-spacing:.1em; padding:.15rem .5rem; border-radius:2px; border:1px solid; }
+.ev-type.combat    { color:#e85d4a; border-color:#e85d4a40; background:#e85d4a10; }
+.ev-type.dialogue  { color:#4a9eed; border-color:#4a9eed40; background:#4a9eed10; }
+.ev-type.discovery { color:#f5c842; border-color:#f5c84240; background:#f5c84210; }
+.ev-type.travel    { color:#5dba7f; border-color:#5dba7f40; background:#5dba7f10; }
+.ev-type.magic     { color:#c084f0; border-color:#c084f040; background:#c084f010; }
+.ev-type.plot      { color:#f0884a; border-color:#f0884a40; background:#f0884a10; }
+.ev-type.other     { color:#888; border-color:#33333380; background:#1a1a1a; }
+.ev-meta { display:flex; align-items:center; gap:.75rem; }
+.ev-time { font-size:10px; color:#333; }
+.ev-loc  { font-size:10px; color:#3a5a8a; }
+.ev-desc { font-size:13px; color:#bbb; line-height:1.6; margin-bottom:.5rem; }
+.ev-chars { display:flex; flex-wrap:wrap; gap:.3rem; margin-bottom:.5rem; }
+.ev-char { font-size:10px; color:#555; background:#1a1a1a; border:1px solid #2a2a2a; border-radius:2px; padding:.1rem .45rem; }
+.ev-img { width:100%; max-height:280px; object-fit:cover; border-radius:4px; margin-top:.5rem; cursor:pointer; transition:opacity .2s; }
+.ev-img:hover { opacity:.85; }
+
+/* Gallery */
+.gallery-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:.5rem; }
+.gallery-img { width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:4px; cursor:pointer; opacity:.7; transition:opacity .2s; border:1px solid #1e1e1e; }
+.gallery-img:hover { opacity:1; border-color:#4caf7240; }
+
+/* Transcripts */
+.transcript-block { background:#111; border:1px solid #1e1e1e; border-radius:4px; padding:.85rem 1rem; margin-bottom:.5rem; font-size:12px; line-height:1.8; color:#666; }
+.transcript-meta { font-size:10px; color:#333; margin-bottom:.4rem; }
+.transcript-text { color:#888; }
+
+/* Empty */
+.empty { text-align:center; padding:3rem 2rem; font-size:12px; color:#2a2a2a; letter-spacing:.06em; }
+
+/* Lightbox */
+.lightbox { position:fixed; inset:0; background:rgba(0,0,0,.92); display:none; align-items:center; justify-content:center; z-index:200; cursor:pointer; }
+.lightbox.open { display:flex; }
+.lightbox img { max-width:90vw; max-height:90vh; object-fit:contain; border-radius:4px; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <span class="nav-brand">✦ DREAMSTORY</span>
+  <span class="nav-session" id="session-name"></span>
+  <div class="nav-links">
+    <a class="nav-link" href="/">← Кампании</a>
+    <a class="nav-link" href="/campaign.html">Сессии</a>
+    <a class="nav-link active" href="#">Архив</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- Действия -->
+  <div class="box">
+    <div class="box-title">СЕССИЯ</div>
+    <div class="actions-row">
+      <button class="primary" id="btn-record">▶ Продолжить запись</button>
+      <button class="viz" id="btn-viz">✦ Открыть визуализацию</button>
+    </div>
+  </div>
+
+  <!-- Статистика -->
+  <div class="box">
+    <div class="box-title">СТАТИСТИКА</div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">СОБЫТИЙ</div><div class="stat-value" id="stat-events">—</div></div>
+      <div class="stat-card"><div class="stat-label">ИЗОБРАЖЕНИЙ</div><div class="stat-value" id="stat-images">—</div></div>
+      <div class="stat-card"><div class="stat-label">ЧАНКОВ АУДИО</div><div class="stat-value" id="stat-chunks">—</div></div>
+      <div class="stat-card"><div class="stat-label">ДАТА</div><div class="stat-value" style="font-size:14px;" id="stat-date">—</div></div>
+    </div>
+  </div>
+
+  <!-- World State -->
+  <div class="box" id="ws-box" style="display:none;">
+    <div class="box-title">СОСТОЯНИЕ МИРА</div>
+    <div class="ws-grid" id="ws-grid"></div>
+  </div>
+
+  <!-- Галерея -->
+  <div class="box" id="gallery-box">
+    <div class="box-title">ГАЛЕРЕЯ <span id="gallery-count" style="color:#333;font-size:10px;"></span></div>
+    <div class="gallery-grid" id="gallery-grid">
+      <div class="empty">Загрузка...</div>
+    </div>
+  </div>
+
+  <!-- Timeline событий -->
+  <div class="box">
+    <div class="box-title">СОБЫТИЯ <span id="events-count" style="color:#333;font-size:10px;"></span></div>
+    <div class="timeline" id="timeline">
+      <div class="empty">Загрузка...</div>
+    </div>
+  </div>
+
+  <!-- Транскрипты -->
+  <div class="box" id="transcripts-box">
+    <div class="box-title">
+      ТРАНСКРИПТЫ
+      <button style="font-size:10px;padding:.2rem .6rem;" id="btn-toggle-transcripts">Показать</button>
+    </div>
+    <div id="transcripts-list" style="display:none;"></div>
+  </div>
+
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="$('lightbox').classList.remove('open')">
+  <img id="lightbox-img" src="" alt="" />
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const SESSION_ID    = localStorage.getItem("active-session-id");
+const SESSION_TOKEN = localStorage.getItem("sb-token");
+const SESSION_NAME  = localStorage.getItem("active-session-name") || "Сессия";
+const CAMPAIGN_ID   = localStorage.getItem("active-campaign-id");
+
+if (!SESSION_ID || !SESSION_TOKEN) window.location.href = "/";
+
+$("session-name").textContent = SESSION_NAME;
+
+const sbFetch = (path) => fetch(path, {
+  headers: { "Authorization": `Bearer ${SESSION_TOKEN}` }
+}).then(r => r.json());
+
+// Actions
+$("btn-record").onclick = () => window.location.href = "/record.html";
+$("btn-viz").onclick = () => window.open(`/viz.html?session=${SESSION_ID}`, "_blank");
+
+// Lightbox
+const openLightbox = (src) => {
+  $("lightbox-img").src = src;
+  $("lightbox").classList.add("open");
+};
+
+// Load everything
+const loadAll = async () => {
+  const [events, transcripts, worldStateRes] = await Promise.all([
+    sbFetch(`/api/events?session_id=${SESSION_ID}`),
+    sbFetch(`/api/transcripts?session_id=${SESSION_ID}`),
+    sbFetch(`/api/world-state?session_id=${SESSION_ID}`),
+  ]);
+
+  // Stats
+  const images = Array.isArray(events) ? events.filter(e => e.image_url) : [];
+  $("stat-events").textContent  = Array.isArray(events) ? events.length : 0;
+  $("stat-images").textContent  = images.length;
+  $("stat-chunks").textContent  = Array.isArray(transcripts) ? transcripts.length : 0;
+
+  // Date from first event or session
+  if (Array.isArray(events) && events.length > 0) {
+    const d = new Date(events[0].created_at);
+    $("stat-date").textContent = d.toLocaleDateString("ru");
+  } else {
+    $("stat-date").textContent = "—";
+  }
+
+  // World State
+  if (worldStateRes?.state) {
+    const s = worldStateRes.state;
+    const fields = [
+      { label: "ЛОКАЦИЯ",          value: s.currentLocation },
+      { label: "УГРОЗА",           value: s.currentThreat },
+      { label: "АКТИВНЫЕ NPC",     value: s.activeNPCs },
+      { label: "РЕЗЮМЕ",           value: s.prevSummary },
+      { label: "ЗАМЕТКИ ДМ",      value: s.dmNotes },
+    ].filter(f => f.value);
+    if (fields.length > 0) {
+      $("ws-box").style.display = "block";
+      $("ws-grid").innerHTML = fields.map(f => `
+        <div class="ws-item">
+          <div class="ws-item-label">${f.label}</div>
+          <div class="ws-item-value">${f.value}</div>
+        </div>
+      `).join("");
+    }
+  }
+
+  // Gallery
+  const galleryGrid = $("gallery-grid");
+  if (images.length === 0) {
+    galleryGrid.innerHTML = '<div class="empty">Изображений нет</div>';
+  } else {
+    $("gallery-count").textContent = `(${images.length})`;
+    galleryGrid.innerHTML = "";
+    images.forEach(ev => {
+      const img = document.createElement("img");
+      img.className = "gallery-img";
+      img.src = ev.image_url;
+      img.title = ev.description || "";
+      img.onclick = () => openLightbox(ev.image_url);
+      galleryGrid.appendChild(img);
+    });
+  }
+
+  // Timeline
+  const timeline = $("timeline");
+  if (!Array.isArray(events) || events.length === 0) {
+    timeline.innerHTML = '<div class="empty">Событий нет</div>';
+  } else {
+    $("events-count").textContent = `(${events.length})`;
+    timeline.innerHTML = "";
+    [...events].reverse().forEach(ev => {
+      const typeColors = {
+        combat:"#e85d4a", dialogue:"#4a9eed", discovery:"#f5c842",
+        travel:"#5dba7f", magic:"#c084f0", plot:"#f0884a", other:"#555"
+      };
+      const color = typeColors[ev.type] || "#555";
+      const d = new Date(ev.created_at);
+      const node = document.createElement("div");
+      node.className = "ev-node";
+      node.innerHTML = `
+        <div class="ev-pip" style="border-color:${color};"></div>
+        <div class="ev-card${ev.image_url ? " has-image" : ""}">
+          <div class="ev-top">
+            <span class="ev-type ${ev.type||"other"}">${(ev.type||"other").toUpperCase()}</span>
+            <div class="ev-meta">
+              ${ev.location ? `<span class="ev-loc">◉ ${ev.location}</span>` : ""}
+              <span class="ev-time">${d.toLocaleTimeString("ru",{hour:"2-digit",minute:"2-digit"})}</span>
+            </div>
+          </div>
+          <div class="ev-desc">${ev.description || ""}</div>
+          ${(ev.characters||[]).length ? `<div class="ev-chars">${ev.characters.map(c=>`<span class="ev-char">${c}</span>`).join("")}</div>` : ""}
+          ${ev.image_url ? `<img class="ev-img" src="${ev.image_url}" onclick="openLightbox('${ev.image_url}')" />` : ""}
+        </div>
+      `;
+      timeline.appendChild(node);
+    });
+  }
+
+  // Transcripts
+  const transcriptsList = $("transcripts-list");
+  if (Array.isArray(transcripts) && transcripts.length > 0) {
+    transcriptsList.innerHTML = transcripts.map(t => `
+      <div class="transcript-block">
+        <div class="transcript-meta">Чанк ${t.chunk_num} · ${new Date(t.created_at).toLocaleTimeString("ru",{hour:"2-digit",minute:"2-digit"})}</div>
+        <div class="transcript-text">${t.text}</div>
+      </div>
+    `).join("");
+  } else {
+    transcriptsList.innerHTML = '<div class="empty">Транскриптов нет</div>';
+  }
+};
+
+$("btn-toggle-transcripts").onclick = () => {
+  const list = $("transcripts-list");
+  const btn = $("btn-toggle-transcripts");
+  if (list.style.display === "none") {
+    list.style.display = "block";
+    btn.textContent = "Скрыть";
+  } else {
+    list.style.display = "none";
+    btn.textContent = "Показать";
+  }
+};
+
+loadAll();
+</script>
+</body>
+</html>

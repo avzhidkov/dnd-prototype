@@ -30,6 +30,7 @@ body { font-family: monospace; background: #0d0d0d; color: #c9c9c9; min-height: 
 .card-info { flex:1; min-width:0; }
 .card-name { font-size:14px; color:#ccc; margin-bottom:.2rem; }
 .card-meta { font-size:11px; color:#444; }
+.card-last { font-size:11px; color:#3a3a3a; margin-top:.3rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-style:italic; }
 .card-actions { display:flex; gap:.5rem; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; }
 .empty { text-align:center; padding:4rem 2rem; font-size:12px; color:#2a2a2a; letter-spacing:.06em; line-height:2; }
 .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,.75); display:none; align-items:center; justify-content:center; z-index:100; }
@@ -105,13 +106,18 @@ const loadSessions = async () => {
     const card = document.createElement("div");
     card.className = "card";
     const d = new Date(s.created_at);
-    card.innerHTML = `
-      <div class="card-info">
+card.innerHTML = `
+      <div class="card-info" onclick="openSession('${s.id}','${s.name.replace(/'/g,"\\'")}')">
         <div class="card-name">${s.name}</div>
-        <div class="card-meta">${d.toLocaleDateString("ru")} · ${d.toLocaleTimeString("ru",{hour:"2-digit",minute:"2-digit"})}</div>
+        <div class="card-meta">
+          ${d.toLocaleDateString("ru")} · ${d.toLocaleTimeString("ru",{hour:"2-digit",minute:"2-digit"})}
+          ${s.event_count ? ` · ${s.event_count} событий` : ""}
+          ${s.image_count ? ` · ${s.image_count} изображений` : ""}
+        </div>
+        ${s.last_event ? `<div class="card-last">${s.last_event}</div>` : ""}
       </div>
       <div class="card-actions">
-        <button class="btn primary" onclick="openSession('${s.id}','${s.name.replace(/'/g,"\\'")}')">Запись</button>
+        <button class="btn primary" onclick="openSession('${s.id}','${s.name.replace(/'/g,"\\'")}')">Открыть</button>
         <button class="btn viz" onclick="openViz('${s.id}')">Визуал</button>
         <button class="btn danger" onclick="deleteSession(event,'${s.id}')">×</button>
       </div>
@@ -123,7 +129,7 @@ const loadSessions = async () => {
 const openSession = (id, name) => {
   localStorage.setItem("active-session-id", id);
   localStorage.setItem("active-session-name", name);
-  window.location.href = "/record.html";
+  window.location.href = "/session.html";
 };
 
 const openViz = (id) => {
