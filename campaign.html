@@ -126,12 +126,6 @@ const openSession = (id, name) => {
   window.location.href = "/record.html";
 };
 
-const openSessionSettings = (id, name) => {
-  localStorage.setItem("active-session-id", id);
-  localStorage.setItem("active-session-name", name);
-  window.location.href = "/settings.html";
-};
-
 const openViz = (id) => {
   window.open(`/viz.html?session=${id}`, "_blank");
 };
