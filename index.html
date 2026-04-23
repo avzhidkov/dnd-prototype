@@ -182,6 +182,13 @@ const loadCampaigns = async () => {
   });
 };
 
+const openCampaignSettings = (e, id, name) => {
+  e.stopPropagation();
+  localStorage.setItem("active-campaign-id", id);
+  localStorage.setItem("active-campaign-name", name);
+  window.location.href = "/settings.html";
+};
+
 const openCampaign = (id, name) => {
   localStorage.setItem("active-campaign-id", id);
   localStorage.setItem("active-campaign-name", name);
