@@ -105,7 +105,9 @@ button.primary:hover:not(:disabled) { background:#4caf7215; }
   <!-- API ключи -->
   <div class="box">
     <div class="box-title">ПАРАМЕТРЫ</div>
-    <div class="row"><label>OpenAI</label><input type="password" id="openai-key" placeholder="sk-..." /></div>
+    <div class="row"><label>OpenAI</label><input type="password" id="openai-key" placeholder="sk-... (image gen)" /></div>
+    <div class="row"><label>Groq</label><input type="password" id="groq-key" placeholder="gsk_... (транскрипция)" /></div>
+    <div class="row"><label>Gemini</label><input type="password" id="gemini-key" placeholder="AIza... (нарратив)" /></div>
     <div class="row">
       <label>Язык</label>
       <input type="text" id="lang" value="ru" style="max-width:60px;" />
@@ -163,7 +165,7 @@ button.primary:hover:not(:disabled) { background:#4caf7215; }
     <div class="meter-wrap"><span class="meter-label">tab level</span><div class="meter-bar"><div class="meter-fill" id="meter-tab"></div></div><span class="meter-val" id="meter-tab-val">—</span></div>
     <div class="row"><span style="font-size:12px;color:#555;">Запись</span><div class="dot" id="dot-rec"></div></div>
     <div class="row"><span style="font-size:12px;color:#555;">Whisper</span><div class="dot" id="dot-wh"></div></div>
-    <div class="row"><span style="font-size:12px;color:#555;">GPT-4o</span><div class="dot" id="dot-claude"></div></div>
+    <div class="row"><span style="font-size:12px;color:#555;">Нарратив</span><div class="dot" id="dot-claude"></div></div>
     <div class="timer" id="timer">00:00</div>
     <div class="row" style="justify-content:center;gap:1rem;">
       <button id="btn-start">▶ СТАРТ</button>
@@ -220,6 +222,12 @@ const savedKey = localStorage.getItem("openai-key");
 if (savedKey) $("openai-key").value = savedKey;
 $("openai-key").addEventListener("input", e => localStorage.setItem("openai-key", e.target.value.trim()));
 
+["groq-key","gemini-key"].forEach(id => {
+  const saved = localStorage.getItem(id);
+  if (saved) $(id).value = saved;
+  $(id).addEventListener("input", e => localStorage.setItem(id, e.target.value.trim()));
+});
+
 // ── Supabase helpers ──────────────────────────
 const sbFetch = (path, opts = {}) => fetch(path, {
   ...opts,
@@ -263,6 +271,7 @@ const worldState = {
 
 const loadWorldState = async () => {
   try {
+    // Загружаем последний world state сессии
     const res = await sbFetch(`/api/world-state?session_id=${SESSION_ID}`);
     const data = await res.json();
     if (data?.state) {
@@ -273,28 +282,17 @@ const loadWorldState = async () => {
       worldState.prevSummary     = s.prevSummary     || "";
       worldState.dmNotes         = s.dmNotes         || "";
       worldState.recentEvents    = s.recentEvents    || [];
-      $("ws-location").value     = worldState.currentLocation;
-      $("ws-threat").value       = worldState.currentThreat;
-      $("ws-npcs").value         = worldState.activeNPCs;
+      // Заполняем поля
+      $("ws-location").value    = worldState.currentLocation;
+      $("ws-threat").value      = worldState.currentThreat;
+      $("ws-npcs").value        = worldState.activeNPCs;
       $("ws-prev-summary").value = worldState.prevSummary;
-      $("ws-dm-notes").value     = worldState.dmNotes;
+      $("ws-dm-notes").value    = worldState.dmNotes;
       if (worldState.currentLocation) {
         $("ws-location-auto").textContent = `↑ из прошлой сессии`;
       }
     }
   } catch(e) { console.error("World state load error:", e); }
-
-  // Загружаем резюме прошлых сессий кампании
-  try {
-    const summRes = await sbFetch(`/api/summaries?campaign_id=${CAMPAIGN_ID}`);
-    if (Array.isArray(summRes) && summRes.length > 0) {
-      const allSummaries = summRes
-        .map(s => `=== ${s.sessions?.name || "Сессия"} ===\n${s.summary}`)
-        .join("\n\n");
-      worldState.prevSummary = allSummaries;
-      $("ws-prev-summary").value = allSummaries;
-    }
-  } catch(e) { console.error("Summaries load error:", e); }
 };
 
 const saveWorldState = async () => {
@@ -382,10 +380,11 @@ const saveTranscript = async (text, chunkNum) => {
 let eventsCount = 0;
 
 const sendToClaude = async (transcriptText, chunkNum) => {
-  const key = $("openai-key").value.trim();
-  if (!key) { log("OpenAI ключ не введён","err"); return; }
+  const geminiKey = $("gemini-key").value.trim();
+  const openaiKey = $("openai-key").value.trim();
+  if (!geminiKey && !openaiKey) { log("Нужен Gemini или OpenAI ключ","err"); return; }
   dot("claude","busy");
-  log("Отправляю в GPT-4o...");
+  log(geminiKey ? "Отправляю в Gemini..." : "Отправляю в GPT-4o...");
 
   const ctx = getSessionContext();
 
@@ -442,23 +441,38 @@ Return JSON:
 Or null.`;
 
   try {
-    const res = await fetch("/api/claude", {
-      method: "POST",
-      headers: { "Content-Type":"application/json", "x-openai-key": key },
-      body: JSON.stringify({
-        model: "gpt-4o",
-        max_tokens: 800,
-        messages: [
-          { role:"system", content: systemPrompt },
-          { role:"user",   content: userPrompt },
-        ],
-      }),
-    });
-
-    const data = await res.json();
-    if (!res.ok) { log(`GPT error: ${data.error?.message||JSON.stringify(data)}`,"err"); dot("claude","err"); return; }
-
-    const raw = (data.choices||[]).map(c=>c.message?.content||"").join("").trim();
+    let raw = "";
+    if (geminiKey) {
+      const res = await fetch("/api/gemini", {
+        method: "POST",
+        headers: { "Content-Type":"application/json", "x-gemini-key": geminiKey },
+        body: JSON.stringify({
+          model: "gemini-1.5-flash",
+          max_tokens: 800,
+          system: systemPrompt,
+          contents: [{ role:"user", parts:[{ text: userPrompt }] }],
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { log(`Gemini error: ${data.error?.message||JSON.stringify(data)}`,"err"); dot("claude","err"); return; }
+      raw = data.text || "";
+    } else {
+      const res = await fetch("/api/claude", {
+        method: "POST",
+        headers: { "Content-Type":"application/json", "x-openai-key": openaiKey },
+        body: JSON.stringify({
+          model: "gpt-4o",
+          max_tokens: 800,
+          messages: [
+            { role:"system", content: systemPrompt },
+            { role:"user",   content: userPrompt },
+          ],
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { log(`GPT error: ${data.error?.message||JSON.stringify(data)}`,"err"); dot("claude","err"); return; }
+      raw = (data.choices||[]).map(c=>c.message?.content||"").join("").trim();
+    }
     if (raw === "null" || !raw) { log("GPT-4o: нет значимых событий"); dot("claude","on"); return; }
 
     const event = JSON.parse(raw.replace(/```json|```/g,"").trim());
@@ -560,7 +574,11 @@ const sendToWhisper = async (blob, chunkNum) => {
   form.append("model","whisper-1");
   const lang = $("lang").value.trim(); if (lang) form.append("language",lang);
   try {
-    const res = await fetch("/api/whisper",{method:"POST",headers:{"x-openai-key":key},body:form});
+    const groqKey = $("groq-key").value.trim();
+    const whisperUrl = groqKey ? "/api/groq-whisper" : "/api/whisper";
+    const whisperHeaders = groqKey ? {"x-groq-key": groqKey} : {"x-openai-key": key};
+    form.set("model", groqKey ? "whisper-large-v3" : "whisper-1");
+    const res = await fetch(whisperUrl, {method:"POST", headers: whisperHeaders, body:form});
     const data = await res.json();
     if (!res.ok) { log(`Whisper error: ${data.error?.message}`,"err"); addTranscriptBlock("[ошибка]",chunkNum); dot("wh","err"); return; }
     const text = data.text?.trim()||"[тишина]";
