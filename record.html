@@ -447,7 +447,7 @@ Or null.`;
         method: "POST",
         headers: { "Content-Type":"application/json", "x-gemini-key": geminiKey },
         body: JSON.stringify({
-          model: "gemini-1.5-flash",
+          model: "gemini-2.0-flash",
           max_tokens: 800,
           system: systemPrompt,
           contents: [{ role:"user", parts:[{ text: userPrompt }] }],
