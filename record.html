@@ -84,6 +84,11 @@ button.primary:hover:not(:disabled) { background:#4caf7215; }
 .ws-field input { width:100%; }
 .ws-val { font-size:11px; color:#4a8fcc; font-style:italic; min-height:16px; }
 .briefing-actions { display:flex; gap:.75rem; align-items:center; margin-top:.5rem; }
+.radio-group { display:flex; gap:.75rem; align-items:center; }
+.radio-group label { min-width:unset; display:flex; align-items:center; gap:.35rem; cursor:pointer; font-size:12px; color:#888; }
+.radio-group label:hover { color:#c9c9c9; }
+.radio-group input[type=radio] { accent-color:#4caf72; cursor:pointer; }
+.keys-saved { font-size:11px; color:#4caf72; opacity:0; transition:opacity .3s; margin-left:auto; }
 </style>
 </head>
 <body>
@@ -105,9 +110,30 @@ button.primary:hover:not(:disabled) { background:#4caf7215; }
   <!-- API ключи -->
   <div class="box">
     <div class="box-title">ПАРАМЕТРЫ</div>
-    <div class="row"><label>OpenAI</label><input type="password" id="openai-key" placeholder="sk-... (image gen)" /></div>
-    <div class="row"><label>Groq</label><input type="password" id="groq-key" placeholder="gsk_... (транскрипция)" /></div>
-    <div class="row"><label>Gemini</label><input type="password" id="gemini-key" placeholder="AIza... (нарратив)" /></div>
+
+    <div class="row">
+      <label>OpenAI</label>
+      <input type="password" id="openai-key" placeholder="sk-... (Whisper + image gen)" />
+    </div>
+    <div class="row">
+      <label>Groq</label>
+      <input type="password" id="groq-key" placeholder="gsk_... (транскрипция, бесплатно)" />
+    </div>
+
+    <div class="row">
+      <label>Нарратив</label>
+      <div class="radio-group">
+        <label><input type="radio" name="narrative-engine" value="gpt" id="engine-gpt" checked /> GPT-4o</label>
+        <label><input type="radio" name="narrative-engine" value="gemini" id="engine-gemini" /> Gemini</label>
+      </div>
+      <span class="keys-saved" id="keys-saved">Сохранено ✓</span>
+    </div>
+
+    <div class="row" id="gemini-row" style="display:none;">
+      <label>Gemini</label>
+      <input type="password" id="gemini-key" placeholder="AIza... (нарратив)" />
+    </div>
+
     <div class="row">
       <label>Язык</label>
       <input type="text" id="lang" value="ru" style="max-width:60px;" />
@@ -137,7 +163,7 @@ button.primary:hover:not(:disabled) { background:#4caf7215; }
 
     <div style="margin-bottom:.85rem;">
       <label class="field-label">ЧТО ПРОИЗОШЛО В ПРОШЛОЙ СЕССИИ (кратко)</label>
-      <textarea id="ws-prev-summary" rows="2" placeholder="Партия нашла дневник графа. Сигурд ранен зомби. Обнаружен тайный алтарь..."></textarea>
+      <textarea id="ws-prev-summary" rows="2" placeholder="Партия нашла дневник графа. Сигурд ранен зомби..."></textarea>
     </div>
 
     <div style="margin-bottom:.85rem;">
@@ -147,7 +173,7 @@ button.primary:hover:not(:disabled) { background:#4caf7215; }
 
     <div>
       <label class="field-label">ЗАМЕТКИ ДМ / ОСОБЫЕ УСЛОВИЯ ЭТОЙ СЕССИИ</label>
-      <textarea id="ws-dm-notes" rows="2" placeholder="Сегодня финальная битва. Партия истощена, у Сигурда осталось 8 HP..."></textarea>
+      <textarea id="ws-dm-notes" rows="2" placeholder="Сегодня финальная битва. Партия истощена..."></textarea>
     </div>
 
     <div class="briefing-actions">
@@ -178,8 +204,8 @@ button.primary:hover:not(:disabled) { background:#4caf7215; }
     <div class="box-title">СТАТИСТИКА</div>
     <div class="stat-row"><span>Чанков / событий</span><span class="stat-val"><span id="s-chunks">0</span> / <span id="s-events">0</span></span></div>
     <div class="stat-row"><span>Минут аудио</span><span class="stat-val" id="s-mins">0.0</span></div>
-    <div class="stat-row"><span>Стоимость Whisper</span><span class="stat-val" id="s-cost-w">$0.000</span></div>
-    <div class="stat-row"><span>Стоимость GPT-4o (est.)</span><span class="stat-val" id="s-cost-c">$0.000</span></div>
+    <div class="stat-row"><span>Стоимость транскрипции</span><span class="stat-val" id="s-cost-w">$0.000</span></div>
+    <div class="stat-row"><span>Стоимость нарратива (est.)</span><span class="stat-val" id="s-cost-c">$0.000</span></div>
   </div>
 
   <!-- Транскрипт -->
@@ -217,16 +243,37 @@ $("session-name").textContent = SESSION_NAME;
 const vizLink = $("nav-viz");
 if (vizLink && SESSION_ID) vizLink.href = `/viz.html?session=${SESSION_ID}`;
 
-// ── API key ───────────────────────────────────
-const savedKey = localStorage.getItem("openai-key");
-if (savedKey) $("openai-key").value = savedKey;
-$("openai-key").addEventListener("input", e => localStorage.setItem("openai-key", e.target.value.trim()));
+// ── API keys — автосохранение ─────────────────
+const showKeysSaved = () => {
+  const el = $("keys-saved");
+  el.style.opacity = 1;
+  setTimeout(() => { el.style.opacity = 0; }, 2000);
+};
 
-["groq-key","gemini-key"].forEach(id => {
+["openai-key", "groq-key", "gemini-key"].forEach(id => {
+  const el = $(id); if (!el) return;
   const saved = localStorage.getItem(id);
-  if (saved) $(id).value = saved;
-  $(id).addEventListener("input", e => localStorage.setItem(id, e.target.value.trim()));
+  if (saved) el.value = saved;
+  el.addEventListener("input", e => {
+    localStorage.setItem(id, e.target.value.trim());
+    showKeysSaved();
+  });
 });
+
+// ── Narrative engine selector ─────────────────
+const savedEngine = localStorage.getItem("narrative-engine") || "gpt";
+const engineRadio = document.querySelector(`input[name="narrative-engine"][value="${savedEngine}"]`);
+if (engineRadio) engineRadio.checked = true;
+$("gemini-row").style.display = savedEngine === "gemini" ? "flex" : "none";
+
+document.querySelectorAll('input[name="narrative-engine"]').forEach(radio => {
+  radio.addEventListener("change", e => {
+    localStorage.setItem("narrative-engine", e.target.value);
+    $("gemini-row").style.display = e.target.value === "gemini" ? "flex" : "none";
+  });
+});
+
+const getEngine = () => document.querySelector('input[name="narrative-engine"]:checked')?.value || "gpt";
 
 // ── Supabase helpers ──────────────────────────
 const sbFetch = (path, opts = {}) => fetch(path, {
@@ -271,7 +318,6 @@ const worldState = {
 
 const loadWorldState = async () => {
   try {
-    // Загружаем последний world state сессии
     const res = await sbFetch(`/api/world-state?session_id=${SESSION_ID}`);
     const data = await res.json();
     if (data?.state) {
@@ -282,27 +328,36 @@ const loadWorldState = async () => {
       worldState.prevSummary     = s.prevSummary     || "";
       worldState.dmNotes         = s.dmNotes         || "";
       worldState.recentEvents    = s.recentEvents    || [];
-      // Заполняем поля
-      $("ws-location").value    = worldState.currentLocation;
-      $("ws-threat").value      = worldState.currentThreat;
-      $("ws-npcs").value        = worldState.activeNPCs;
+      $("ws-location").value     = worldState.currentLocation;
+      $("ws-threat").value       = worldState.currentThreat;
+      $("ws-npcs").value         = worldState.activeNPCs;
       $("ws-prev-summary").value = worldState.prevSummary;
-      $("ws-dm-notes").value    = worldState.dmNotes;
+      $("ws-dm-notes").value     = worldState.dmNotes;
       if (worldState.currentLocation) {
         $("ws-location-auto").textContent = `↑ из прошлой сессии`;
       }
     }
   } catch(e) { console.error("World state load error:", e); }
+
+  // Загружаем резюме прошлых сессий кампании
+  try {
+    const summRes = await sbFetch(`/api/summaries?campaign_id=${CAMPAIGN_ID}`);
+    if (Array.isArray(summRes) && summRes.length > 0) {
+      const allSummaries = summRes
+        .map(s => `=== ${s.sessions?.name || "Сессия"} ===\n${s.summary}`)
+        .join("\n\n");
+      worldState.prevSummary = allSummaries;
+      $("ws-prev-summary").value = allSummaries;
+    }
+  } catch(e) { console.error("Summaries load error:", e); }
 };
 
 const saveWorldState = async () => {
-  // Читаем из полей
   worldState.currentLocation = $("ws-location").value.trim();
   worldState.currentThreat   = $("ws-threat").value.trim();
   worldState.activeNPCs      = $("ws-npcs").value.trim();
   worldState.prevSummary     = $("ws-prev-summary").value.trim();
   worldState.dmNotes         = $("ws-dm-notes").value.trim();
-
   try {
     await sbFetch("/api/world-state", {
       method: "POST",
@@ -312,22 +367,17 @@ const saveWorldState = async () => {
 };
 
 const updateWorldStateFromEvent = async (event) => {
-  // Обновляем локацию только если она изменилась
   if (event.location && event.location_changed !== false) {
     worldState.currentLocation = event.location;
     $("ws-location").value = event.location;
     $("ws-location-auto").textContent = `↑ обновлено автоматически`;
   }
-  // Добавляем событие в память
   worldState.recentEvents.push({
     type: event.type,
     event: event.event,
     location: event.location || worldState.currentLocation,
   });
-  // Держим последние 10
   if (worldState.recentEvents.length > 10) worldState.recentEvents.shift();
-
-  // Сохраняем снапшот каждые 5 событий
   if (worldState.recentEvents.length % 5 === 0) {
     await saveWorldState();
     log("World state сохранён", "ok");
@@ -376,15 +426,19 @@ const saveTranscript = async (text, chunkNum) => {
   } catch(e) { console.error("Transcript save error:", e); }
 };
 
-// ── GPT-4o ────────────────────────────────────
+// ── Narrative LLM ─────────────────────────────
 let eventsCount = 0;
 
 const sendToClaude = async (transcriptText, chunkNum) => {
+  const engine    = getEngine();
   const geminiKey = $("gemini-key").value.trim();
   const openaiKey = $("openai-key").value.trim();
-  if (!geminiKey && !openaiKey) { log("Нужен Gemini или OpenAI ключ","err"); return; }
+
+  if (engine === "gemini" && !geminiKey) { log("Gemini ключ не введён","err"); return; }
+  if (engine === "gpt"    && !openaiKey) { log("OpenAI ключ не введён","err"); return; }
+
   dot("claude","busy");
-  log(geminiKey ? "Отправляю в Gemini..." : "Отправляю в GPT-4o...");
+  log(engine === "gemini" ? "Отправляю в Gemini..." : "Отправляю в GPT-4o...");
 
   const ctx = getSessionContext();
 
@@ -442,7 +496,8 @@ Or null.`;
 
   try {
     let raw = "";
-    if (geminiKey) {
+
+    if (engine === "gemini") {
       const res = await fetch("/api/gemini", {
         method: "POST",
         headers: { "Content-Type":"application/json", "x-gemini-key": geminiKey },
@@ -473,12 +528,12 @@ Or null.`;
       if (!res.ok) { log(`GPT error: ${data.error?.message||JSON.stringify(data)}`,"err"); dot("claude","err"); return; }
       raw = (data.choices||[]).map(c=>c.message?.content||"").join("").trim();
     }
-    if (raw === "null" || !raw) { log("GPT-4o: нет значимых событий"); dot("claude","on"); return; }
+
+    if (raw === "null" || !raw) { log("Нарратив: нет значимых событий"); dot("claude","on"); return; }
 
     const event = JSON.parse(raw.replace(/```json|```/g,"").trim());
     if (!event?.event) { dot("claude","on"); return; }
 
-    // Обновляем world state
     await updateWorldStateFromEvent(event);
 
     eventsCount++;
@@ -501,7 +556,7 @@ Or null.`;
     }
 
   } catch(e) {
-    log("GPT parse error: "+e.message,"err");
+    log("Нарратив parse error: "+e.message,"err");
     dot("claude","err");
   }
 };
@@ -564,20 +619,23 @@ const addTranscriptBlock = (text, chunkNum, pending=false) => {
 };
 
 const sendToWhisper = async (blob, chunkNum) => {
-  const key = $("openai-key").value.trim();
-  if (!key) { log("OpenAI ключ не введён","err"); return; }
+  const groqKey   = $("groq-key").value.trim();
+  const openaiKey = $("openai-key").value.trim();
+  if (!groqKey && !openaiKey) { log("Нужен Groq или OpenAI ключ для транскрипции","err"); return; }
+
   dot("wh","busy");
   addTranscriptBlock("Распознаю речь...", chunkNum, true);
-  log(`Чанк ${chunkNum} → Whisper (${(blob.size/1024).toFixed(0)} KB)...`);
+  log(`Чанк ${chunkNum} → ${groqKey ? "Groq" : "Whisper"} (${(blob.size/1024).toFixed(0)} KB)...`);
+
   const form = new FormData();
   form.append("file", new Blob([blob],{type:"audio/webm"}), `chunk-${chunkNum}.webm`);
-  form.append("model","whisper-1");
-  const lang = $("lang").value.trim(); if (lang) form.append("language",lang);
+  const lang = $("lang").value.trim(); if (lang) form.append("language", lang);
+
+  const whisperUrl     = groqKey ? "/api/groq-whisper" : "/api/whisper";
+  const whisperHeaders = groqKey ? {"x-groq-key": groqKey} : {"x-openai-key": openaiKey};
+  form.append("model", groqKey ? "whisper-large-v3" : "whisper-1");
+
   try {
-    const groqKey = $("groq-key").value.trim();
-    const whisperUrl = groqKey ? "/api/groq-whisper" : "/api/whisper";
-    const whisperHeaders = groqKey ? {"x-groq-key": groqKey} : {"x-openai-key": key};
-    form.set("model", groqKey ? "whisper-large-v3" : "whisper-1");
     const res = await fetch(whisperUrl, {method:"POST", headers: whisperHeaders, body:form});
     const data = await res.json();
     if (!res.ok) { log(`Whisper error: ${data.error?.message}`,"err"); addTranscriptBlock("[ошибка]",chunkNum); dot("wh","err"); return; }
@@ -585,11 +643,11 @@ const sendToWhisper = async (blob, chunkNum) => {
     addTranscriptBlock(text, chunkNum);
     chunksProcessed++; totalMinutes += parseFloat($("chunk-sec").value||30)/60;
     setStat("s-chunks",chunksProcessed); setStat("s-mins",totalMinutes.toFixed(1));
-    setStat("s-cost-w","$"+(totalMinutes*0.006).toFixed(3));
-    log(`Whisper ✓ чанк ${chunkNum}`, "ok");
+    setStat("s-cost-w", groqKey ? "$0.000" : "$"+(totalMinutes*0.006).toFixed(3));
+    log(`Транскрипция ✓ чанк ${chunkNum}`, "ok");
     dot("wh","on");
     if (text !== "[тишина]" && text.length > 20) {
-      saveTranscript(text, chunkNum); // сохраняем в БД
+      saveTranscript(text, chunkNum);
       sendToClaude(text, chunkNum);
     }
   } catch(e) { log("Fetch error: "+e.message,"err"); dot("wh","err"); }
@@ -612,9 +670,7 @@ const setupMeter = (stream, fillId, valId) => {
 };
 
 $("btn-start").onclick = async () => {
-  // Сохраняем briefing перед стартом
   await saveWorldState();
-
   $("btn-start").disabled=true; stopping=false;
   log("Запрашиваю вкладку...");
   let tabStream;
@@ -665,7 +721,7 @@ $("btn-start").onclick = async () => {
   };
 
   startNewChunk();
-  dot("rec","on"); log(`Запись началась. Чанк каждые ${$("chunk-sec").value||30} сек.`,"ok");
+  dot("rec","on"); log(`Запись началась. Чанк каждые ${$("chunk-sec").value||30} сек. Движок: ${getEngine().toUpperCase()}`,"ok");
   seconds=0; timerInterval=setInterval(updateTimer,1000);
   $("btn-stop").disabled=false;
   tabStream.getAudioTracks().forEach(t=>t.onended=()=>{ log("Захват прерван","err"); stopAll(); });
@@ -678,7 +734,6 @@ const stopAll = async () => {
   clearInterval(timerInterval);
   dot("tab",""); dot("mic",""); dot("rec","");
   $("btn-stop").disabled=true; $("btn-start").disabled=false;
-  // Сохраняем финальный world state
   await saveWorldState();
   log("Остановлено — world state сохранён");
 };
