@@ -3,23 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <title>DreamStory — Настройки кампании</title>
+<link rel="stylesheet" href="/theme.css" />
 <style>
-:root[data-theme="dark"] {
-  --bg:#0d0d0d; --bg2:#181818; --bg3:#131313;
-  --border:#2a2a2a; --border2:#1e1e1e;
-  --text:#c9c9c9; --muted:#666; --dim:#444; --faint:#333;
-  --accent:#4caf72; --accent2:rgba(74,175,114,.15);
-  --blue:#4a8fcc; --red:#c05040; --red2:rgba(192,80,64,.15);
-  --input-bg:#111; --input-border:#222;
-}
-:root[data-theme="light"] {
-  --bg:#f5f5f0; --bg2:#ffffff; --bg3:#f0f0eb;
-  --border:#d0d0c8; --border2:#e0e0d8;
-  --text:#1a1a1a; --muted:#555; --dim:#777; --faint:#999;
-  --accent:#2d8a52; --accent2:rgba(45,138,82,.12);
-  --blue:#2a6fa8; --red:#b03020; --red2:rgba(176,48,32,.1);
-  --input-bg:#fafaf7; --input-border:#ccc;
-}
 * { box-sizing:border-box; margin:0; padding:0; }
 body { font-family:monospace; background:var(--bg); color:var(--text); min-height:100vh; transition:background .2s,color .2s; }
 .nav { display:flex; align-items:center; background:var(--bg2); border-bottom:1px solid var(--border); padding:0 1.5rem; height:46px; position:sticky; top:0; z-index:10; }
