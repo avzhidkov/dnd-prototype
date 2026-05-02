@@ -310,6 +310,20 @@ const loadSessionSettings = async () => {
       $("settings-hint").textContent = charCount > 0
         ? `✦ ${sessionSettings.worldName || "мир"} · ${charCount} персонажей`
         : "Настройки кампании не заполнены — перейди в Настройки";
+        // Загружаем персонажей из таблицы characters
+      try {
+        const charsRes = await sbFetch(`/api/characters?campaign_id=${CAMPAIGN_ID}`);
+        const chars = await charsRes.json();
+        if (Array.isArray(chars) && chars.length > 0) {
+          sessionSettings.characters = chars.map(c => ({
+            name: c.name,
+            race: c.race,
+            appearance: c.appearance,
+            art: c.avatar_url,
+          }));
+          $("settings-hint").textContent = `✦ ${sessionSettings.worldName || "мир"} · ${chars.length} персонажей`;
+        }
+      } catch(e) { console.error("Characters load error:", e); }
     } else {
       $("settings-hint").textContent = "Настройки кампании не заполнены — перейди в Настройки";
     }
