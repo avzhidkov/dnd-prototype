@@ -1,48 +1,78 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <title>DreamStory — Настройки кампании</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: monospace; background: #0d0d0d; color: #c9c9c9; min-height: 100vh; }
-.nav { display:flex; align-items:center; background:#111; border-bottom:1px solid #1e1e1e; padding:0 1.5rem; height:46px; position:sticky; top:0; z-index:10; }
-.nav-brand { font-size:12px; letter-spacing:.18em; color:#4caf72; flex-shrink:0; }
-.nav-links { display:flex; align-items:center; gap:.25rem; flex-shrink:0; margin-left:auto; }
-.nav-link { font-family:monospace; font-size:10px; letter-spacing:.08em; color:#444; text-decoration:none; padding:.3rem .7rem; border:1px solid transparent; border-radius:3px; transition:all .2s; white-space:nowrap; }
-.nav-link:hover { color:#c9c9c9; border-color:#2a2a2a; }
-.nav-link.active { color:#4caf72; border-color:#4caf7230; }
-.nav-campaign { font-size:11px; color:#333; padding:0 1.5rem; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.page { padding:1.75rem 1.5rem; max-width:780px; margin:0 auto; }
-.box { background:#181818; border:1px solid #2a2a2a; border-radius:6px; padding:1.25rem 1.5rem; margin-bottom:1rem; }
-.box-title { font-size:10px; letter-spacing:.12em; color:#444; margin-bottom:1rem; padding-bottom:.6rem; border-bottom:1px solid #1e1e1e; }
-input[type=text] { width:100%; background:#111; border:1px solid #222; border-radius:3px; padding:.5rem .75rem; color:#ccc; font-family:monospace; font-size:12px; outline:none; transition:border-color .2s; margin-bottom:.75rem; }
-input[type=text]:focus { border-color:#4a8fcc; }
-textarea { width:100%; background:#111; border:1px solid #222; border-radius:3px; padding:.6rem .75rem; color:#ccc; font-family:monospace; font-size:12px; outline:none; resize:vertical; line-height:1.6; transition:border-color .2s; margin-bottom:.75rem; }
-textarea:focus { border-color:#4a8fcc; }
-.field-label { font-size:10px; letter-spacing:.1em; color:#555; display:block; margin-bottom:.35rem; }
-.char-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
-@media(max-width:600px){ .char-grid { grid-template-columns:1fr; } }
-.char-card { background:#131313; border:1px solid #222; border-radius:6px; padding:1rem 1.1rem; }
-.char-num { font-size:10px; letter-spacing:.1em; color:#4caf72; display:block; margin-bottom:.85rem; }
-.char-field { margin-bottom:.65rem; }
-.char-field:last-child { margin-bottom:0; }
-.char-field label { font-size:10px; letter-spacing:.08em; color:#555; display:block; margin-bottom:.3rem; }
-.char-field input { margin-bottom:0; }
-.char-field textarea { margin-bottom:0; min-height:70px; }
-.art-upload { display:flex; align-items:center; gap:.75rem; }
-.art-thumb { width:44px; height:44px; border-radius:4px; border:1px solid #2a2a2a; object-fit:cover; flex-shrink:0; }
-.art-placeholder { width:44px; height:44px; border-radius:4px; border:1px dashed #2a2a2a; background:#111; display:flex; align-items:center; justify-content:center; font-size:16px; color:#2a2a2a; flex-shrink:0; }
-.art-btn { font-size:10px; padding:.3rem .65rem; color:#555; border:1px solid #2a2a2a; background:transparent; border-radius:3px; cursor:pointer; font-family:monospace; transition:all .2s; }
-.art-btn:hover { color:#4a8fcc; border-color:#4a8fcc; }
-.save-bar { display:flex; align-items:center; gap:1rem; }
-button.save { font-family:monospace; font-size:11px; letter-spacing:.1em; padding:.55rem 1.25rem; border:1px solid #4caf7260; background:transparent; color:#4caf72; cursor:pointer; border-radius:3px; transition:all .2s; }
-button.save:hover { background:#4caf7215; }
-.save-status { font-size:11px; color:#4caf72; opacity:0; transition:opacity .3s; }
+:root[data-theme="dark"] {
+  --bg:#0d0d0d; --bg2:#181818; --bg3:#131313;
+  --border:#2a2a2a; --border2:#1e1e1e;
+  --text:#c9c9c9; --muted:#666; --dim:#444; --faint:#333;
+  --accent:#4caf72; --accent2:rgba(74,175,114,.15);
+  --blue:#4a8fcc; --red:#c05040; --red2:rgba(192,80,64,.15);
+  --input-bg:#111; --input-border:#222;
+}
+:root[data-theme="light"] {
+  --bg:#f5f5f0; --bg2:#ffffff; --bg3:#f0f0eb;
+  --border:#d0d0c8; --border2:#e0e0d8;
+  --text:#1a1a1a; --muted:#555; --dim:#777; --faint:#999;
+  --accent:#2d8a52; --accent2:rgba(45,138,82,.12);
+  --blue:#2a6fa8; --red:#b03020; --red2:rgba(176,48,32,.1);
+  --input-bg:#fafaf7; --input-border:#ccc;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:monospace; background:var(--bg); color:var(--text); min-height:100vh; transition:background .2s,color .2s; }
+.nav { display:flex; align-items:center; background:var(--bg2); border-bottom:1px solid var(--border); padding:0 1.5rem; height:46px; position:sticky; top:0; z-index:10; }
+.nav-brand { font-size:12px; letter-spacing:.18em; color:var(--accent); flex-shrink:0; }
+.nav-campaign { font-size:11px; color:var(--faint); padding:0 1.5rem; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.nav-links { display:flex; align-items:center; gap:.25rem; flex-shrink:0; }
+.nav-link { font-family:monospace; font-size:10px; letter-spacing:.08em; color:var(--dim); text-decoration:none; padding:.3rem .7rem; border:1px solid transparent; border-radius:3px; transition:all .2s; white-space:nowrap; }
+.nav-link:hover { color:var(--text); border-color:var(--border); }
+.nav-link.active { color:var(--accent); border-color:rgba(74,175,114,.3); }
+.theme-toggle { background:none; border:1px solid var(--border); border-radius:3px; padding:.3rem .6rem; cursor:pointer; font-size:13px; color:var(--dim); transition:all .2s; margin-left:.5rem; }
+.theme-toggle:hover { border-color:var(--accent); color:var(--accent); }
+.page { padding:1.75rem 1.5rem; max-width:820px; margin:0 auto; }
+.box { background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:1.25rem 1.5rem; margin-bottom:1rem; }
+.box-title { font-size:10px; letter-spacing:.12em; color:var(--dim); margin-bottom:1rem; padding-bottom:.6rem; border-bottom:1px solid var(--border2); display:flex; align-items:center; justify-content:space-between; }
+input[type=text], input[type=password] { width:100%; background:var(--input-bg); border:1px solid var(--input-border); border-radius:3px; padding:.5rem .75rem; color:var(--text); font-family:monospace; font-size:12px; outline:none; transition:border-color .2s; margin-bottom:.75rem; }
+input[type=text]:focus, input[type=password]:focus { border-color:var(--blue); }
+textarea { width:100%; background:var(--input-bg); border:1px solid var(--input-border); border-radius:3px; padding:.6rem .75rem; color:var(--text); font-family:monospace; font-size:12px; outline:none; resize:vertical; line-height:1.6; transition:border-color .2s; margin-bottom:.75rem; }
+textarea:focus { border-color:var(--blue); }
+.field-label { font-size:10px; letter-spacing:.1em; color:var(--muted); display:block; margin-bottom:.35rem; }
 .row { display:flex; align-items:center; gap:.75rem; margin-bottom:.75rem; }
-.row label { font-size:10px; letter-spacing:.08em; color:#555; flex-shrink:0; min-width:100px; }
+.row label { font-size:10px; letter-spacing:.08em; color:var(--muted); flex-shrink:0; min-width:100px; }
 .row input { flex:1; margin-bottom:0; }
-.hint { font-size:11px; color:#3a3a3a; font-style:italic; margin-bottom:.5rem; }
+.hint { font-size:11px; color:var(--faint); font-style:italic; margin-bottom:.85rem; }
+button { font-family:monospace; font-size:11px; letter-spacing:.08em; padding:.45rem 1rem; border:1px solid var(--border); background:transparent; color:var(--muted); cursor:pointer; border-radius:3px; transition:all .2s; }
+button:hover { border-color:var(--accent); color:var(--accent); }
+button.primary { border-color:rgba(74,175,114,.5); color:var(--accent); }
+button.primary:hover { background:var(--accent2); }
+button.danger { border-color:rgba(192,80,64,.4); color:var(--red); font-size:10px; padding:.25rem .6rem; }
+button.danger:hover { background:var(--red2); }
+.save-bar { display:flex; align-items:center; gap:1rem; }
+.save-status { font-size:11px; color:var(--accent); opacity:0; transition:opacity .3s; }
+
+/* Characters */
+.chars-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:.75rem; }
+.char-list { display:flex; flex-direction:column; gap:.75rem; }
+.char-card { background:var(--bg3); border:1px solid var(--border); border-radius:6px; padding:1rem 1.1rem; }
+.char-card-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:.85rem; }
+.char-label { font-size:10px; letter-spacing:.1em; color:var(--accent); }
+.char-body { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
+@media(max-width:600px){ .char-body { grid-template-columns:1fr; } }
+.char-field { display:flex; flex-direction:column; gap:.3rem; margin-bottom:.5rem; }
+.char-field label { font-size:10px; letter-spacing:.08em; color:var(--muted); }
+.char-field input { margin-bottom:0; width:100%; }
+.char-field textarea { margin-bottom:0; min-height:70px; }
+.char-field-full { grid-column:1/-1; }
+.art-upload { display:flex; align-items:center; gap:.75rem; }
+.art-thumb { width:56px; height:56px; border-radius:4px; border:1px solid var(--border); object-fit:cover; flex-shrink:0; }
+.art-placeholder { width:56px; height:56px; border-radius:4px; border:1px dashed var(--border); background:var(--input-bg); display:flex; align-items:center; justify-content:center; font-size:18px; color:var(--border); flex-shrink:0; }
+.art-actions { display:flex; flex-direction:column; gap:.35rem; }
+.art-btn { font-size:10px; padding:.25rem .6rem; color:var(--muted); border:1px solid var(--border); background:transparent; border-radius:3px; cursor:pointer; font-family:monospace; transition:all .2s; }
+.art-btn:hover { color:var(--blue); border-color:var(--blue); }
+.uploading { font-size:10px; color:var(--dim); font-style:italic; }
+.empty-chars { text-align:center; padding:2rem; font-size:12px; color:var(--faint); }
 </style>
 </head>
 <body>
@@ -53,15 +83,17 @@ button.save:hover { background:#4caf7215; }
   <div class="nav-links">
     <a class="nav-link" href="/">← Кампании</a>
     <a class="nav-link" href="/campaign.html">Сессии</a>
-    <a class="nav-link active" href="/settings.html">Настройки кампании</a>
+    <a class="nav-link active" href="/settings.html">Настройки</a>
+    <button class="theme-toggle" id="theme-toggle" title="Сменить тему">☀</button>
   </div>
 </nav>
 
 <div class="page">
 
+  <!-- Мир -->
   <div class="box">
     <div class="box-title">МИР И СЕТТИНГ</div>
-    <p class="hint">Эти настройки общие для всей кампании — попадают в каждую сессию автоматически.</p>
+    <p class="hint">Попадают в каждую сессию автоматически — в промпты нарратива и image gen.</p>
     <label class="field-label">НАЗВАНИЕ МИРА / КАМПАНИИ</label>
     <input type="text" id="s-world-name" placeholder="Forgotten Realms, Curse of Strahd..." />
     <label class="field-label">ОПИСАНИЕ СЕТТИНГА</label>
@@ -70,6 +102,7 @@ button.save:hover { background:#4caf7215; }
     <input type="text" id="s-art-style" placeholder="dark fantasy illustration, detailed, dramatic lighting" />
   </div>
 
+  <!-- Параметры записи -->
   <div class="box">
     <div class="box-title">ПАРАМЕТРЫ ЗАПИСИ ПО УМОЛЧАНИЮ</div>
     <div class="row"><label>Язык Whisper</label><input type="text" id="s-lang" value="ru" style="max-width:80px;" /></div>
@@ -77,15 +110,22 @@ button.save:hover { background:#4caf7215; }
     <div class="row"><label>VAD порог</label><input type="text" id="s-vad" value="10" style="max-width:80px;" /></div>
   </div>
 
+  <!-- Персонажи -->
   <div class="box">
-    <div class="box-title">ПЕРСОНАЖИ ПАРТИИ</div>
-    <p class="hint">Описания внешности попадают в каждый image prompt для консистентности визуала.</p>
-    <div class="char-grid" id="char-grid"></div>
+    <div class="box-title">
+      ПЕРСОНАЖИ ПАРТИИ
+      <button class="primary" id="btn-add-char" style="font-size:10px;padding:.25rem .7rem;">+ Добавить</button>
+    </div>
+    <p class="hint">Описания внешности попадают в каждый image prompt. Загрузи референс-арт для консистентности визуала.</p>
+    <div class="char-list" id="char-list">
+      <div class="empty-chars">Загрузка персонажей...</div>
+    </div>
   </div>
 
-  <div class="box" style="background:transparent;border-color:#1a1a1a;">
+  <!-- Сохранить -->
+  <div class="box" style="background:transparent;border-color:var(--border2);">
     <div class="save-bar">
-      <button class="save" id="btn-save">СОХРАНИТЬ</button>
+      <button class="primary" id="btn-save" style="padding:.55rem 1.25rem;font-size:11px;letter-spacing:.1em;">СОХРАНИТЬ</button>
       <span class="save-status" id="save-status">Сохранено ✓</span>
     </div>
   </div>
@@ -94,71 +134,172 @@ button.save:hover { background:#4caf7215; }
 
 <script>
 const $ = id => document.getElementById(id);
-const CAMPAIGN_ID   = localStorage.getItem("active-campaign-id");
-const CAMPAIGN_NAME = localStorage.getItem("active-campaign-name") || "Кампания";
-const SESSION_ID    = localStorage.getItem("active-session-id");
-const TOKEN         = localStorage.getItem("sb-token");
+const SUPABASE_URL = "https://mbysjfsuqeqjcedgfdmb.supabase.co";
+const SUPABASE_KEY = "sb_publishable_V-Ug9nyp6XPVBIJ3tr3qww_VjwGLg6Z";
+const CAMPAIGN_ID  = localStorage.getItem("active-campaign-id");
+const CAMPAIGN_NAME= localStorage.getItem("active-campaign-name") || "Кампания";
+const TOKEN        = localStorage.getItem("sb-token");
 
 if (!CAMPAIGN_ID || !TOKEN) window.location.href = "/";
 
 $("nav-campaign-name").textContent = CAMPAIGN_NAME;
 
+// ── Theme ─────────────────────────────────────
+const savedTheme = localStorage.getItem("theme") || "dark";
+document.documentElement.setAttribute("data-theme", savedTheme);
+$("theme-toggle").textContent = savedTheme === "dark" ? "☀" : "☾";
+
+$("theme-toggle").onclick = () => {
+  const cur = document.documentElement.getAttribute("data-theme");
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem("theme", next);
+  $("theme-toggle").textContent = next === "dark" ? "☀" : "☾";
+};
+
+// ── API ───────────────────────────────────────
 const api = (path, opts = {}) => fetch(path, {
   ...opts,
-  headers: { "Content-Type": "application/json", "Authorization": `Bearer ${TOKEN}`, ...(opts.headers||{}) },
+  headers: { "Content-Type":"application/json", "Authorization":`Bearer ${TOKEN}`, ...(opts.headers||{}) },
 }).then(r => r.json());
 
-const buildCharCards = (chars) => {
-  const grid = $("char-grid");
-  grid.innerHTML = "";
-  chars.forEach((ch, i) => {
+// ── Characters state ──────────────────────────
+let characters = []; // {id, name, race, appearance, avatar_url, _dirty, _new, _deleted}
+
+const renderChars = () => {
+  const list = $("char-list");
+  const visible = characters.filter(c => !c._deleted);
+  if (visible.length === 0) {
+    list.innerHTML = '<div class="empty-chars">Нет персонажей — нажми "+ Добавить"</div>';
+    return;
+  }
+  list.innerHTML = "";
+  visible.forEach((ch, idx) => {
     const card = document.createElement("div");
     card.className = "char-card";
-    const num = document.createElement("span");
-    num.className = "char-num"; num.textContent = `ПЕРСОНАЖ ${i+1}`;
-    card.appendChild(num);
-    const makeField = (labelText, id, type, placeholder, value) => {
-      const wrap = document.createElement("div"); wrap.className = "char-field";
-      const lbl = document.createElement("label"); lbl.textContent = labelText;
-      wrap.appendChild(lbl);
-      let inp;
-      if (type === "textarea") { inp = document.createElement("textarea"); inp.rows=3; inp.placeholder=placeholder; inp.textContent=value||""; }
-      else { inp = document.createElement("input"); inp.type="text"; inp.placeholder=placeholder; inp.value=value||""; }
-      inp.id = id; wrap.appendChild(inp); return wrap;
+    card.dataset.id = ch.id || ch._tempId;
+
+    card.innerHTML = `
+      <div class="char-card-top">
+        <span class="char-label">ПЕРСОНАЖ ${idx + 1}</span>
+        <div style="display:flex;gap:.5rem;align-items:center;">
+
+          <button class="danger btn-del-char">× Удалить</button>
+        </div>
+      </div>
+      <div class="char-body">
+        <div class="char-field">
+          <label>ИМЯ</label>
+          <input type="text" data-field="name" placeholder="Имя персонажа" value="${ch.name||""}" />
+        </div>
+        <div class="char-field">
+          <label>КЛАСС / РАСА</label>
+          <input type="text" data-field="race" placeholder="Паладин, человек" value="${ch.race||""}" />
+        </div>
+        <div class="char-field char-field-full">
+          <label>ОПИСАНИЕ ВНЕШНОСТИ</label>
+          <textarea data-field="appearance" rows="3" placeholder="Внешность для image prompt...">${ch.appearance||""}</textarea>
+        </div>
+        <div class="char-field char-field-full">
+          <label>РЕФЕРЕНС-АРТ</label>
+          <div class="art-upload">
+            ${ch.avatar_url
+              ? `<img class="art-thumb" src="${ch.avatar_url}" data-art />`
+              : `<div class="art-placeholder" data-art>✦</div>`}
+            <div class="art-actions">
+              <button class="art-btn btn-upload-art">Загрузить</button>
+              ${ch.avatar_url ? `<button class="art-btn danger btn-clear-art" style="border-color:rgba(192,80,64,.4);color:var(--red);">Удалить</button>` : ""}
+              <span class="uploading" style="display:none;">Загрузка...</span>
+            </div>
+            <input type="file" accept="image/*" style="display:none;" class="file-input" />
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Events
+    const cid = ch.id || ch._tempId;
+
+    card.querySelectorAll("[data-field]").forEach(el => {
+      el.addEventListener("input", () => {
+        const c = characters.find(x => (x.id||x._tempId) === cid);
+        if (c) { c[el.dataset.field] = el.value; c._dirty = true; }
+      });
+      el.addEventListener("change", () => {
+        const c = characters.find(x => (x.id||x._tempId) === cid);
+        if (c) { c[el.dataset.field] = el.value; c._dirty = true; }
+      });
+    });
+
+    card.querySelector(".btn-del-char").onclick = () => {
+      const c = characters.find(x => (x.id||x._tempId) === cid);
+      if (c) c._deleted = true;
+      renderChars();
     };
-    card.appendChild(makeField("ИМЯ", `c${i}-name`, "text", "Имя персонажа", ch.name));
-    card.appendChild(makeField("КЛАСС / РАСА", `c${i}-race`, "text", "Паладин, человек", ch.race));
-    card.appendChild(makeField("ОПИСАНИЕ ВНЕШНОСТИ", `c${i}-appearance`, "textarea", "Внешность для image prompt...", ch.appearance));
-    const artWrap = document.createElement("div"); artWrap.className = "char-field";
-    const artLbl = document.createElement("label"); artLbl.textContent = "РЕФЕРЕНС-АРТ";
-    artWrap.appendChild(artLbl);
-    const artRow = document.createElement("div"); artRow.className = "art-upload";
-    const artEl = document.createElement(ch.art ? "img" : "div");
-    artEl.id = `c${i}-art`; artEl.dataset.src = ch.art||"";
-    if (ch.art) { artEl.className="art-thumb"; artEl.src=ch.art; }
-    else { artEl.className="art-placeholder"; artEl.textContent="✦"; }
-    artRow.appendChild(artEl);
-    const btns = document.createElement("div"); btns.style.cssText="display:flex;flex-direction:column;gap:.4rem;";
-    const btnUp = document.createElement("button"); btnUp.className="art-btn"; btnUp.textContent="Загрузить"; btnUp.onclick=()=>$(`c${i}-file`).click();
-    const btnCl = document.createElement("button"); btnCl.className="art-btn"; btnCl.style.cssText="border-color:#c0504040;color:#c05040;"; btnCl.textContent="Удалить";
-    btnCl.onclick=()=>{ const ph=document.createElement("div"); ph.className="art-placeholder"; ph.id=`c${i}-art`; ph.dataset.src=""; ph.textContent="✦"; $(`c${i}-art`).replaceWith(ph); };
-    btns.appendChild(btnUp); btns.appendChild(btnCl); artRow.appendChild(btns);
-    const fileInp = document.createElement("input"); fileInp.type="file"; fileInp.id=`c${i}-file`; fileInp.accept="image/*"; fileInp.style.display="none";
-    fileInp.onchange = function() {
-      const file = this.files[0]; if (!file) return;
-      const reader = new FileReader();
-      reader.onload = e => { const img=document.createElement("img"); img.className="art-thumb"; img.id=`c${i}-art`; img.src=e.target.result; img.dataset.src=e.target.result; $(`c${i}-art`).replaceWith(img); };
-      reader.readAsDataURL(file);
+
+    const fileInput = card.querySelector(".file-input");
+    card.querySelector(".btn-upload-art").onclick = () => fileInput.click();
+
+    fileInput.onchange = async () => {
+      const file = fileInput.files[0]; if (!file) return;
+      const uploading = card.querySelector(".uploading");
+      uploading.style.display = "block";
+      try {
+        const ext = file.name.split(".").pop();
+        const path = `${CAMPAIGN_ID}/${cid}-${Date.now()}.${ext}`;
+        const arrayBuffer = await file.arrayBuffer();
+        const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/characters/${path}`, {
+          method: "POST",
+          headers: { "Authorization":`Bearer ${TOKEN}`, "apikey":SUPABASE_KEY, "Content-Type":file.type },
+          body: arrayBuffer,
+        });
+        if (uploadRes.ok) {
+          const url = `${SUPABASE_URL}/storage/v1/object/public/characters/${path}`;
+          const c = characters.find(x => (x.id||x._tempId) === cid);
+          if (c) { c.avatar_url = url; c._dirty = true; }
+          const artEl = card.querySelector("[data-art]");
+          const img = document.createElement("img");
+          img.className = "art-thumb"; img.src = url; img.dataset.art = "";
+          artEl.replaceWith(img);
+        }
+      } catch(e) { console.error(e); }
+      uploading.style.display = "none";
     };
-    artRow.appendChild(fileInp); artWrap.appendChild(artRow); card.appendChild(artWrap);
-    grid.appendChild(card);
+
+    const clearBtn = card.querySelector(".btn-clear-art");
+    if (clearBtn) {
+      clearBtn.onclick = () => {
+        const c = characters.find(x => (x.id||x._tempId) === cid);
+        if (c) { c.avatar_url = ""; c._dirty = true; }
+        const artEl = card.querySelector("[data-art]");
+        const ph = document.createElement("div");
+        ph.className = "art-placeholder"; ph.dataset.art = ""; ph.textContent = "✦";
+        artEl.replaceWith(ph);
+        clearBtn.remove();
+      };
+    }
+
+    list.appendChild(card);
   });
 };
 
-// Load from campaign
+$("btn-add-char").onclick = () => {
+  characters.push({
+    _tempId: `temp-${Date.now()}`,
+    _new: true,
+    _dirty: true,
+    name: "", type: "pc", race: "", appearance: "", avatar_url: "",
+    reference_art_urls: [], narrative: {},
+  });
+  renderChars();
+  $("char-list").lastElementChild?.scrollIntoView({ behavior:"smooth" });
+};
+
+// ── Load ──────────────────────────────────────
 const loadSettings = async () => {
-  const data = await api("/api/campaigns");
-  const campaign = Array.isArray(data) ? data.find(c => c.id === CAMPAIGN_ID) : null;
+  // Campaign settings
+  const campaigns = await api("/api/campaigns");
+  const campaign = Array.isArray(campaigns) ? campaigns.find(c => c.id === CAMPAIGN_ID) : null;
   const s = campaign?.settings || {};
   $("s-world-name").value = s.worldName || "";
   $("s-world-desc").value = s.worldDesc || "";
@@ -166,11 +307,16 @@ const loadSettings = async () => {
   $("s-lang").value       = s.lang      || "ru";
   $("s-chunk").value      = s.chunk     || "30";
   $("s-vad").value        = s.vad       || "10";
-  buildCharCards(s.characters || Array(4).fill({name:"",race:"",appearance:"",art:""}));
+
+  // Characters from DB
+  const chars = await api(`/api/characters?campaign_id=${CAMPAIGN_ID}`);
+  characters = Array.isArray(chars) ? chars : [];
+  renderChars();
 };
 
-// Save to campaign
+// ── Save ──────────────────────────────────────
 $("btn-save").onclick = async () => {
+  // Save campaign settings
   const settings = {
     worldName: $("s-world-name").value,
     worldDesc: $("s-world-desc").value,
@@ -178,18 +324,50 @@ $("btn-save").onclick = async () => {
     lang:      $("s-lang").value,
     chunk:     $("s-chunk").value,
     vad:       $("s-vad").value,
-    characters: Array(4).fill(null).map((_,i) => ({
-      name:       document.getElementById(`c${i}-name`)?.value||"",
-      race:       document.getElementById(`c${i}-race`)?.value||"",
-      appearance: document.getElementById(`c${i}-appearance`)?.value||"",
-      art:        document.getElementById(`c${i}-art`)?.dataset?.src||"",
-    })),
   };
   await fetch(`/api/campaigns?id=${CAMPAIGN_ID}`, {
     method: "PATCH",
-    headers: { "Content-Type":"application/json", "Authorization": `Bearer ${TOKEN}` },
+    headers: { "Content-Type":"application/json", "Authorization":`Bearer ${TOKEN}` },
     body: JSON.stringify({ settings }),
   });
+
+  // Save characters
+  const promises = characters.map(async ch => {
+    if (ch._deleted && ch.id) {
+      return api(`/api/characters?id=${ch.id}`, { method:"DELETE" });
+    }
+    if (ch._new && !ch._deleted && ch.name) {
+      return api("/api/characters", {
+        method: "POST",
+        body: JSON.stringify({
+          campaign_id: CAMPAIGN_ID,
+          name: ch.name, type: 'pc', race: ch.race,
+          appearance: ch.appearance, avatar_url: ch.avatar_url,
+          reference_art_urls: ch.reference_art_urls || [],
+          narrative: ch.narrative || {},
+        }),
+      });
+    }
+    if (ch._dirty && !ch._new && !ch._deleted && ch.id) {
+      return api(`/api/characters?id=${ch.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          name: ch.name, type: 'pc', race: ch.race,
+          appearance: ch.appearance, avatar_url: ch.avatar_url,
+          reference_art_urls: ch.reference_art_urls || [],
+          narrative: ch.narrative || {},
+        }),
+      });
+    }
+  });
+
+  await Promise.all(promises);
+
+  // Reload to get fresh IDs
+  const fresh = await api(`/api/characters?campaign_id=${CAMPAIGN_ID}`);
+  characters = Array.isArray(fresh) ? fresh : [];
+  renderChars();
+
   const st = $("save-status"); st.style.opacity=1;
   setTimeout(() => { st.style.opacity=0; }, 2500);
 };
