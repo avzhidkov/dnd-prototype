@@ -1,23 +1,26 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <title>DreamStory — Визуализация</title>
+<link rel="stylesheet" href="/theme.css" />
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: monospace; background: #080808; color: #c9c9c9; min-height: 100vh; display: flex; flex-direction: column; }
-.nav { display:flex; align-items:center; background:#0d0d0d; border-bottom:1px solid #1a1a1a; padding:0 1.5rem; height:46px; flex-shrink:0; gap:1rem; }
-.nav-brand { font-size:12px; letter-spacing:.18em; color:#4caf72; flex-shrink:0; }
-.nav-session { font-size:11px; color:#333; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+body { font-family: monospace; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; transition: background .2s, color .2s; }
+.nav { display:flex; align-items:center; background:var(--bg2); border-bottom:1px solid var(--border); padding:0 1.5rem; height:46px; flex-shrink:0; gap:1rem; }
+.nav-brand { font-size:12px; letter-spacing:.18em; color:var(--accent); flex-shrink:0; }
+.nav-session { font-size:11px; color:var(--faint); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .nav-links { display:flex; align-items:center; gap:.25rem; flex-shrink:0; }
-.nav-link { font-family:monospace; font-size:10px; letter-spacing:.08em; color:#444; text-decoration:none; padding:.3rem .7rem; border:1px solid transparent; border-radius:3px; transition:all .2s; white-space:nowrap; }
-.nav-link:hover { color:#c9c9c9; border-color:#2a2a2a; }
-.nav-link.active { color:#4caf72; border-color:#4caf7230; }
-.status-bar { display:flex; align-items:center; padding:.4rem 1.5rem; background:#0a0a0a; border-bottom:1px solid #111; flex-shrink:0; }
-.status { font-size:11px; color:#444; flex:1; }
-.status.live { color:#4caf72; }
+.nav-link { font-family:monospace; font-size:10px; letter-spacing:.08em; color:var(--dim); text-decoration:none; padding:.3rem .7rem; border:1px solid transparent; border-radius:3px; transition:all .2s; white-space:nowrap; }
+.nav-link:hover { color:var(--text); border-color:var(--border); }
+.nav-link.active { color:var(--accent); border-color:rgba(74,175,114,.3); }
+.theme-toggle { background:none; border:1px solid var(--border); border-radius:3px; padding:.3rem .6rem; cursor:pointer; font-size:13px; color:var(--dim); transition:all .2s; margin-left:.25rem; }
+.theme-toggle:hover { border-color:var(--accent); color:var(--accent); }
+.status-bar { display:flex; align-items:center; padding:.4rem 1.5rem; background:var(--bg2); border-bottom:1px solid var(--border2); flex-shrink:0; }
+.status { font-size:11px; color:var(--dim); flex:1; }
+.status.live { color:var(--accent); }
 .status.busy { color:#f0c040; animation:pulse 1s ease-in-out infinite; }
-.status.err  { color:#c05040; }
+.status.err  { color:var(--red); }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 .stage { flex:1; display:flex; align-items:center; justify-content:center; position:relative; min-height:0; padding:1.5rem; }
 .main-wrap { position:relative; width:100%; max-width:860px; aspect-ratio:16/9; }
@@ -34,28 +37,28 @@ body { font-family: monospace; background: #080808; color: #c9c9c9; min-height: 
 .main-type.travel    { color:#5dba7f; border-color:#5dba7f40; background:#5dba7f15; }
 .main-type.magic     { color:#c084f0; border-color:#c084f040; background:#c084f015; }
 .main-type.plot      { color:#f0884a; border-color:#f0884a40; background:#f0884a15; }
-.main-type.other     { color:#888; border-color:#33333380; background:#1a1a1a; }
+.main-type.other     { color:#888; border-color:#33333380; background:transparent; }
 .main-chars { font-size:11px; color:#8a7a5e; }
-.main-time  { font-size:10px; color:#444; margin-left:auto; }
-.placeholder { width:100%; height:100%; border:1px dashed #1e1e1e; border-radius:6px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.75rem; }
-.placeholder-icon { font-size:2rem; color:#1e1e1e; }
-.placeholder-text { font-size:11px; letter-spacing:.1em; color:#2a2a2a; text-align:center; line-height:1.8; }
-.spinner { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:40px; height:40px; border:2px solid #1e1e1e; border-top-color:#4caf72; border-radius:50%; animation:spin .8s linear infinite; display:none; }
+.main-time  { font-size:10px; color:var(--faint); margin-left:auto; }
+.placeholder { width:100%; height:100%; border:1px dashed var(--border); border-radius:6px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.75rem; }
+.placeholder-icon { font-size:2rem; color:var(--border); }
+.placeholder-text { font-size:11px; letter-spacing:.1em; color:var(--faint); text-align:center; line-height:1.8; }
+.spinner { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:40px; height:40px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; display:none; }
 .spinner.on { display:block; }
 @keyframes spin { to { transform:translate(-50%,-50%) rotate(360deg); } }
-.gallery-bar { flex-shrink:0; padding:.75rem 1.5rem; border-top:1px solid #141414; background:#0a0a0a; }
+.gallery-bar { flex-shrink:0; padding:.75rem 1.5rem; border-top:1px solid var(--border2); background:var(--bg2); }
 .gallery-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:.6rem; }
-.gallery-title { font-size:10px; letter-spacing:.12em; color:#2a2a2a; }
+.gallery-title { font-size:10px; letter-spacing:.12em; color:var(--faint); }
 .gallery-scroll { display:flex; gap:.5rem; overflow-x:auto; padding-bottom:.25rem; }
 .gallery-scroll::-webkit-scrollbar { height:3px; }
-.gallery-scroll::-webkit-scrollbar-track { background:#111; }
-.gallery-scroll::-webkit-scrollbar-thumb { background:#2a2a2a; border-radius:2px; }
+.gallery-scroll::-webkit-scrollbar-track { background:var(--input-bg); }
+.gallery-scroll::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
 .gallery-thumb { flex-shrink:0; width:96px; height:54px; border-radius:3px; object-fit:cover; cursor:pointer; opacity:.5; border:1px solid transparent; transition:opacity .2s,border-color .2s; }
 .gallery-thumb:hover { opacity:.85; }
-.gallery-thumb.active { opacity:1; border-color:#4caf7260; }
-.gallery-empty { font-size:11px; color:#222; font-style:italic; padding:.5rem 0; }
-.btn-clear { font-family:monospace; font-size:10px; padding:.25rem .6rem; border:1px solid #2a2a2a; background:transparent; color:#333; cursor:pointer; border-radius:3px; transition:all .2s; }
-.btn-clear:hover { color:#c05040; border-color:#c0504040; }
+.gallery-thumb.active { opacity:1; border-color:rgba(74,175,114,.5); }
+.gallery-empty { font-size:11px; color:var(--faint); font-style:italic; padding:.5rem 0; }
+.btn-clear { font-family:monospace; font-size:10px; padding:.25rem .6rem; border:1px solid var(--border); background:transparent; color:var(--faint); cursor:pointer; border-radius:3px; transition:all .2s; }
+.btn-clear:hover { color:var(--red); border-color:rgba(192,80,64,.4); }
 </style>
 </head>
 <body>
@@ -68,6 +71,7 @@ body { font-family: monospace; background: #080808; color: #c9c9c9; min-height: 
     <a class="nav-link" href="/campaign.html">Сессии</a>
     <a class="nav-link" id="nav-record" href="/record.html">Запись</a>
     <a class="nav-link active" href="#">Визуализация</a>
+    <button class="theme-toggle" id="theme-btn">☀</button>
   </div>
 </nav>
 
@@ -105,11 +109,21 @@ body { font-family: monospace; background: #080808; color: #c9c9c9; min-height: 
 </div>
 
 <script>
+// ── Theme ─────────────────────────────────────
+document.documentElement.setAttribute("data-theme", localStorage.getItem("theme") || "dark");
+const _tb = document.getElementById("theme-btn");
+_tb.textContent = (localStorage.getItem("theme")||"dark") === "dark" ? "☀" : "☾";
+_tb.onclick = () => {
+  const t = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", t);
+  localStorage.setItem("theme", t);
+  _tb.textContent = t === "dark" ? "☀" : "☾";
+};
+
 const $ = id => document.getElementById(id);
 
-// SESSION_ID берём из URL в первую очередь
 const urlParams = new URLSearchParams(window.location.search);
-const SESSION_ID  = urlParams.get("session") || localStorage.getItem("active-session-id");
+const SESSION_ID    = urlParams.get("session") || localStorage.getItem("active-session-id");
 const SESSION_TOKEN = localStorage.getItem("sb-token");
 const SESSION_NAME  = localStorage.getItem("active-session-name") || "Сессия";
 
@@ -118,15 +132,13 @@ if (SESSION_ID) $("nav-record").href = `/record.html`;
 
 const getKey = () => localStorage.getItem("openai-key") || "";
 
-// Gallery state
 const gallery = [];
 let activeIndex = -1;
 
-// Сохранение в Supabase — используем SESSION_ID из URL, не ждём BroadcastChannel
 const saveToSupabase = async (url, eventData) => {
   if (!SESSION_ID || !SESSION_TOKEN) return;
   const b64 = url.startsWith("data:image") ? url.split(",")[1] : null;
-  if (!b64) return; // URL изображений с CDN не конвертируем
+  if (!b64) return;
   try {
     await fetch("/api/events", {
       method: "POST",
@@ -143,7 +155,6 @@ const saveToSupabase = async (url, eventData) => {
   } catch(e) { console.error("Save error:", e); }
 };
 
-// IndexedDB fallback
 let db;
 const DB_NAME = "dnd-gallery", DB_VER = 1, STORE = "images";
 const initDB = () => new Promise((resolve, reject) => {
@@ -251,21 +262,15 @@ const generateImage = async (eventData, charArts = []) => {
     if (!itm) { setStatus("Нет данных в ответе", "err"); return; }
     const url = itm.url || (itm.b64_json ? `data:image/png;base64,${itm.b64_json}` : null);
     if (!url) { setStatus("Нет изображения в ответе", "err"); return; }
-
-    // Сначала добавляем в галерею
     addToGallery(url, eventData);
     setStatus(`✦ ${(eventData.type||"событие").toUpperCase()} — ${new Date().toLocaleTimeString("ru")}`, "live");
-
-    // Сразу сохраняем в Supabase — не ждём BroadcastChannel
     await saveToSupabase(url, eventData);
-
   } catch(e) {
     $("spinner").classList.remove("on");
     setStatus("Ошибка: " + e.message, "err");
   }
 };
 
-// BroadcastChannel — просто получаем событие, SESSION_ID уже знаем
 const bc = new BroadcastChannel("dnd-narrative");
 bc.onmessage = (e) => {
   if (e.data?.type === "event" && e.data.event?.generate_image) {
@@ -274,7 +279,6 @@ bc.onmessage = (e) => {
   }
 };
 
-// Загрузка галереи из Supabase
 const loadServerGallery = async () => {
   if (!SESSION_ID || !SESSION_TOKEN) {
     initDB().then(() => loadImagesFromDB().then(items => {
@@ -317,7 +321,6 @@ const loadServerGallery = async () => {
   setStatus("Слушаю основную вкладку...", "");
 };
 
-// Очистка
 $("btn-clear").onclick = () => {
   if (!confirm("Очистить галерею?")) return;
   clearDB().then(() => {

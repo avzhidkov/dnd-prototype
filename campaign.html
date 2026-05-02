@@ -1,44 +1,47 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <title>DreamStory — Кампания</title>
+<link rel="stylesheet" href="/theme.css" />
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: monospace; background: #0d0d0d; color: #c9c9c9; min-height: 100vh; }
-.nav { display:flex; align-items:center; background:#111; border-bottom:1px solid #1e1e1e; padding:0 1.5rem; height:46px; position:sticky; top:0; z-index:10; }
-.nav-brand { font-size:12px; letter-spacing:.18em; color:#4caf72; flex-shrink:0; }
-.nav-campaign { font-size:11px; color:#333; flex:1; padding:0 1.5rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+body { font-family: monospace; background: var(--bg); color: var(--text); min-height: 100vh; transition: background .2s, color .2s; }
+.nav { display:flex; align-items:center; background:var(--bg2); border-bottom:1px solid var(--border); padding:0 1.5rem; height:46px; position:sticky; top:0; z-index:10; }
+.nav-brand { font-size:12px; letter-spacing:.18em; color:var(--accent); flex-shrink:0; }
+.nav-campaign { font-size:11px; color:var(--faint); flex:1; padding:0 1.5rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .nav-links { display:flex; align-items:center; gap:.25rem; flex-shrink:0; }
-.nav-link { font-family:monospace; font-size:10px; letter-spacing:.08em; color:#444; text-decoration:none; padding:.3rem .7rem; border:1px solid transparent; border-radius:3px; transition:all .2s; white-space:nowrap; }
-.nav-link:hover { color:#c9c9c9; border-color:#2a2a2a; }
+.nav-link { font-family:monospace; font-size:10px; letter-spacing:.08em; color:var(--dim); text-decoration:none; padding:.3rem .7rem; border:1px solid transparent; border-radius:3px; transition:all .2s; white-space:nowrap; }
+.nav-link:hover { color:var(--text); border-color:var(--border); }
+.theme-toggle { background:none; border:1px solid var(--border); border-radius:3px; padding:.3rem .6rem; cursor:pointer; font-size:13px; color:var(--dim); transition:all .2s; margin-left:.5rem; }
+.theme-toggle:hover { border-color:var(--accent); color:var(--accent); }
 .page { padding:2rem 1.5rem; max-width:700px; margin:0 auto; }
 .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; gap:1rem; flex-wrap:wrap; }
-.page-title { font-size:11px; letter-spacing:.15em; color:#444; }
+.page-title { font-size:11px; letter-spacing:.15em; color:var(--dim); }
 .header-actions { display:flex; gap:.5rem; }
-.btn { font-family:monospace; font-size:11px; letter-spacing:.08em; padding:.45rem 1rem; border:1px solid #333; background:transparent; color:#777; cursor:pointer; border-radius:3px; transition:all .2s; }
-.btn:hover { border-color:#4caf72; color:#4caf72; }
-.btn.primary { border-color:#4caf7260; color:#4caf72; }
-.btn.primary:hover { background:#4caf7215; }
-.btn.danger { border-color:#c0504040; color:#c05040; font-size:10px; padding:.3rem .6rem; }
-.btn.danger:hover { background:#c0504015; }
-.btn.viz { border-color:#c084f040; color:#c084f0; }
-.btn.viz:hover { background:#c084f015; }
+.btn { font-family:monospace; font-size:11px; letter-spacing:.08em; padding:.45rem 1rem; border:1px solid var(--border); background:transparent; color:var(--muted); cursor:pointer; border-radius:3px; transition:all .2s; }
+.btn:hover { border-color:var(--accent); color:var(--accent); }
+.btn.primary { border-color:rgba(74,175,114,.5); color:var(--accent); }
+.btn.primary:hover { background:var(--accent2); }
+.btn.danger { border-color:rgba(192,80,64,.4); color:var(--red); font-size:10px; padding:.3rem .6rem; }
+.btn.danger:hover { background:var(--red2); }
+.btn.viz { border-color:rgba(192,132,240,.4); color:#c084f0; }
+.btn.viz:hover { background:rgba(192,132,240,.1); }
 .list { display:flex; flex-direction:column; gap:.6rem; }
-.card { background:#181818; border:1px solid #2a2a2a; border-radius:6px; padding:1rem 1.25rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; transition:border-color .2s; }
-.card:hover { border-color:#4caf7240; }
-.card-info { flex:1; min-width:0; }
-.card-name { font-size:14px; color:#ccc; margin-bottom:.2rem; }
-.card-meta { font-size:11px; color:#444; }
-.card-last { font-size:11px; color:#3a3a3a; margin-top:.3rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-style:italic; }
+.card { background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:1rem 1.25rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; transition:border-color .2s; }
+.card:hover { border-color:rgba(74,175,114,.3); }
+.card-info { flex:1; min-width:0; cursor:pointer; }
+.card-name { font-size:14px; color:var(--text); margin-bottom:.2rem; }
+.card-meta { font-size:11px; color:var(--dim); }
+.card-last { font-size:11px; color:var(--faint); margin-top:.3rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-style:italic; }
 .card-actions { display:flex; gap:.5rem; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; }
-.empty { text-align:center; padding:4rem 2rem; font-size:12px; color:#2a2a2a; letter-spacing:.06em; line-height:2; }
+.empty { text-align:center; padding:4rem 2rem; font-size:12px; color:var(--faint); letter-spacing:.06em; line-height:2; }
 .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,.75); display:none; align-items:center; justify-content:center; z-index:100; }
 .modal-bg.open { display:flex; }
-.modal { background:#181818; border:1px solid #2a2a2a; border-radius:6px; padding:1.75rem; width:100%; max-width:380px; display:flex; flex-direction:column; gap:1rem; }
-.modal-title { font-size:11px; letter-spacing:.12em; color:#555; }
-.modal-inp { width:100%; background:#111; border:1px solid #222; border-radius:3px; padding:.5rem .75rem; color:#ccc; font-family:monospace; font-size:13px; outline:none; transition:border-color .2s; }
-.modal-inp:focus { border-color:#4caf72; }
+.modal { background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:1.75rem; width:100%; max-width:380px; display:flex; flex-direction:column; gap:1rem; }
+.modal-title { font-size:11px; letter-spacing:.12em; color:var(--muted); }
+.modal-inp { width:100%; background:var(--input-bg); border:1px solid var(--input-border); border-radius:3px; padding:.5rem .75rem; color:var(--text); font-family:monospace; font-size:13px; outline:none; transition:border-color .2s; }
+.modal-inp:focus { border-color:var(--accent); }
 .modal-row { display:flex; gap:.75rem; }
 </style>
 </head>
@@ -49,8 +52,9 @@ body { font-family: monospace; background: #0d0d0d; color: #c9c9c9; min-height: 
   <span class="nav-campaign" id="nav-campaign"></span>
   <div class="nav-links">
     <a class="nav-link" href="/">← Кампании</a>
-    <a class="nav-link" href="/settings.html">Настройки кампании</a>
-    <a class="nav-link" id="nav-viz-campaign" href="#">Визуал кампании</a>
+    <a class="nav-link" href="/settings.html">Настройки</a>
+    <a class="nav-link" id="nav-viz-campaign" href="#">Визуал</a>
+    <button class="theme-toggle" id="theme-btn">☀</button>
   </div>
 </nav>
 
@@ -66,7 +70,6 @@ body { font-family: monospace; background: #0d0d0d; color: #c9c9c9; min-height: 
   </div>
 </div>
 
-<!-- New session modal -->
 <div class="modal-bg" id="modal-session">
   <div class="modal">
     <span class="modal-title">НОВАЯ СЕССИЯ</span>
@@ -79,6 +82,17 @@ body { font-family: monospace; background: #0d0d0d; color: #c9c9c9; min-height: 
 </div>
 
 <script>
+// ── Theme ─────────────────────────────────────
+document.documentElement.setAttribute("data-theme", localStorage.getItem("theme") || "dark");
+const _tb = document.getElementById("theme-btn");
+_tb.textContent = (localStorage.getItem("theme")||"dark") === "dark" ? "☀" : "☾";
+_tb.onclick = () => {
+  const t = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", t);
+  localStorage.setItem("theme", t);
+  _tb.textContent = t === "dark" ? "☀" : "☾";
+};
+
 const $ = id => document.getElementById(id);
 const CAMPAIGN_ID   = localStorage.getItem("active-campaign-id");
 const CAMPAIGN_NAME = localStorage.getItem("active-campaign-name") || "Кампания";
@@ -106,7 +120,7 @@ const loadSessions = async () => {
     const card = document.createElement("div");
     card.className = "card";
     const d = new Date(s.created_at);
-card.innerHTML = `
+    card.innerHTML = `
       <div class="card-info" onclick="openSession('${s.id}','${s.name.replace(/'/g,"\\'")}')">
         <div class="card-name">${s.name}</div>
         <div class="card-meta">
@@ -131,11 +145,7 @@ const openSession = (id, name) => {
   localStorage.setItem("active-session-name", name);
   window.location.href = "/session.html";
 };
-
-const openViz = (id) => {
-  window.open(`/viz.html?session=${id}`, "_blank");
-};
-
+const openViz = (id) => window.open(`/viz.html?session=${id}`, "_blank");
 const deleteSession = async (e, id) => {
   e.stopPropagation();
   if (!confirm("Удалить сессию и все её данные?")) return;
@@ -143,7 +153,6 @@ const deleteSession = async (e, id) => {
   loadSessions();
 };
 
-// Modal
 $("btn-new-session").onclick = () => { $("modal-session").classList.add("open"); $("new-session-name").focus(); };
 $("modal-session-cancel").onclick = () => $("modal-session").classList.remove("open");
 $("modal-session-create").onclick = async () => {

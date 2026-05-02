@@ -1,46 +1,47 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <title>DreamStory</title>
+<link rel="stylesheet" href="/theme.css" />
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: monospace; background: #0d0d0d; color: #c9c9c9; min-height: 100vh; }
-.nav { display:flex; align-items:center; justify-content:space-between; background:#111; border-bottom:1px solid #1e1e1e; padding:0 1.5rem; height:46px; }
-.nav-brand { font-size:13px; letter-spacing:.18em; color:#4caf72; }
-.nav-user { display:flex; align-items:center; gap:1rem; font-size:11px; color:#444; }
-.btn { font-family:monospace; font-size:11px; letter-spacing:.08em; padding:.45rem 1rem; border:1px solid #333; background:transparent; color:#777; cursor:pointer; border-radius:3px; transition:all .2s; }
-.btn:hover { border-color:#4caf72; color:#4caf72; }
-.btn.primary { border-color:#4caf7260; color:#4caf72; }
-.btn.primary:hover { background:#4caf7215; }
-.btn.danger { border-color:#c0504040; color:#c05040; font-size:10px; padding:.3rem .6rem; }
-.btn.danger:hover { background:#c0504015; }
+body { font-family: monospace; background: var(--bg); color: var(--text); min-height: 100vh; transition: background .2s, color .2s; }
+.nav { display:flex; align-items:center; justify-content:space-between; background:var(--bg2); border-bottom:1px solid var(--border); padding:0 1.5rem; height:46px; }
+.nav-brand { font-size:13px; letter-spacing:.18em; color:var(--accent); }
+.nav-user { display:flex; align-items:center; gap:.75rem; font-size:11px; color:var(--dim); }
+.btn { font-family:monospace; font-size:11px; letter-spacing:.08em; padding:.45rem 1rem; border:1px solid var(--border); background:transparent; color:var(--muted); cursor:pointer; border-radius:3px; transition:all .2s; }
+.btn:hover { border-color:var(--accent); color:var(--accent); }
+.btn.primary { border-color:rgba(74,175,114,.5); color:var(--accent); }
+.btn.primary:hover { background:var(--accent2); }
+.btn.danger { border-color:rgba(192,80,64,.4); color:var(--red); font-size:10px; padding:.3rem .6rem; }
+.btn.danger:hover { background:var(--red2); }
+.theme-toggle { background:none; border:1px solid var(--border); border-radius:3px; padding:.3rem .6rem; cursor:pointer; font-size:13px; color:var(--dim); transition:all .2s; }
+.theme-toggle:hover { border-color:var(--accent); color:var(--accent); }
 .page { padding:2rem 1.5rem; max-width:700px; margin:0 auto; }
 .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; }
-.page-title { font-size:11px; letter-spacing:.15em; color:#444; }
+.page-title { font-size:11px; letter-spacing:.15em; color:var(--dim); }
 .list { display:flex; flex-direction:column; gap:.6rem; }
-.card { background:#181818; border:1px solid #2a2a2a; border-radius:6px; padding:1rem 1.25rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; transition:border-color .2s; }
-.card:hover { border-color:#4caf7240; }
+.card { background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:1rem 1.25rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; transition:border-color .2s; }
+.card:hover { border-color:rgba(74,175,114,.3); }
 .card-info { flex:1; min-width:0; cursor:pointer; }
-.card-name { font-size:14px; color:#ccc; margin-bottom:.2rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.card-meta { font-size:11px; color:#444; }
-.card-desc { font-size:11px; color:#3a3a3a; margin-top:.2rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card-name { font-size:14px; color:var(--text); margin-bottom:.2rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card-meta { font-size:11px; color:var(--dim); }
+.card-desc { font-size:11px; color:var(--faint); margin-top:.2rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .card-actions { display:flex; gap:.5rem; flex-shrink:0; }
-.empty { text-align:center; padding:4rem 2rem; font-size:12px; color:#2a2a2a; letter-spacing:.06em; line-height:2; }
+.empty { text-align:center; padding:4rem 2rem; font-size:12px; color:var(--faint); letter-spacing:.06em; line-height:2; }
 .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,.75); display:none; align-items:center; justify-content:center; z-index:100; }
 .modal-bg.open { display:flex; }
-.modal { background:#181818; border:1px solid #2a2a2a; border-radius:6px; padding:1.75rem; width:100%; max-width:400px; display:flex; flex-direction:column; gap:1rem; }
-.modal-title { font-size:11px; letter-spacing:.12em; color:#555; }
-.modal-inp { width:100%; background:#111; border:1px solid #222; border-radius:3px; padding:.5rem .75rem; color:#ccc; font-family:monospace; font-size:13px; outline:none; transition:border-color .2s; }
-.modal-inp:focus { border-color:#4caf72; }
+.modal { background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:1.75rem; width:100%; max-width:400px; display:flex; flex-direction:column; gap:1rem; }
+.modal-title { font-size:11px; letter-spacing:.12em; color:var(--muted); }
+.modal-inp { width:100%; background:var(--input-bg); border:1px solid var(--input-border); border-radius:3px; padding:.5rem .75rem; color:var(--text); font-family:monospace; font-size:13px; outline:none; transition:border-color .2s; }
+.modal-inp:focus { border-color:var(--accent); }
 .modal-row { display:flex; gap:.75rem; }
-
-/* Auth */
 .auth-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80vh; gap:1.5rem; }
-.auth-title { font-size:13px; letter-spacing:.15em; color:#444; }
-.auth-box { background:#181818; border:1px solid #2a2a2a; border-radius:6px; padding:2rem; width:100%; max-width:340px; }
-.auth-btn { width:100%; font-family:monospace; font-size:12px; letter-spacing:.06em; padding:.75rem; border:1px solid #4caf7260; background:transparent; color:#4caf72; cursor:pointer; border-radius:3px; transition:all .2s; display:flex; align-items:center; justify-content:center; gap:.5rem; }
-.auth-btn:hover { background:#4caf7215; }
+.auth-title { font-size:13px; letter-spacing:.15em; color:var(--dim); }
+.auth-box { background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:2rem; width:100%; max-width:340px; }
+.auth-btn { width:100%; font-family:monospace; font-size:12px; letter-spacing:.06em; padding:.75rem; border:1px solid rgba(74,175,114,.5); background:transparent; color:var(--accent); cursor:pointer; border-radius:3px; transition:all .2s; display:flex; align-items:center; justify-content:center; gap:.5rem; }
+.auth-btn:hover { background:var(--accent2); }
 </style>
 </head>
 <body>
@@ -50,10 +51,10 @@ body { font-family: monospace; background: #0d0d0d; color: #c9c9c9; min-height: 
   <div class="nav-user">
     <span id="nav-email"></span>
     <button class="btn" id="btn-logout" style="display:none;font-size:10px;padding:.3rem .6rem;">Выйти</button>
+    <button class="theme-toggle" id="theme-btn">☀</button>
   </div>
 </nav>
 
-<!-- Auth -->
 <div class="auth-wrap" id="auth-wrap" style="display:none;">
   <span class="auth-title">// DREAMSTORY</span>
   <div class="auth-box">
@@ -64,7 +65,6 @@ body { font-family: monospace; background: #0d0d0d; color: #c9c9c9; min-height: 
   </div>
 </div>
 
-<!-- Campaigns -->
 <div class="page" id="campaigns-page" style="display:none;">
   <div class="page-header">
     <span class="page-title">МОИ КАМПАНИИ</span>
@@ -75,7 +75,6 @@ body { font-family: monospace; background: #0d0d0d; color: #c9c9c9; min-height: 
   </div>
 </div>
 
-<!-- New campaign modal -->
 <div class="modal-bg" id="modal-campaign">
   <div class="modal">
     <span class="modal-title">НОВАЯ КАМПАНИЯ</span>
@@ -89,6 +88,17 @@ body { font-family: monospace; background: #0d0d0d; color: #c9c9c9; min-height: 
 </div>
 
 <script>
+// ── Theme ─────────────────────────────────────
+document.documentElement.setAttribute("data-theme", localStorage.getItem("theme") || "dark");
+const _tb = document.getElementById("theme-btn");
+_tb.textContent = (localStorage.getItem("theme")||"dark") === "dark" ? "☀" : "☾";
+_tb.onclick = () => {
+  const t = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", t);
+  localStorage.setItem("theme", t);
+  _tb.textContent = t === "dark" ? "☀" : "☾";
+};
+
 const SUPABASE_URL = "https://mbysjfsuqeqjcedgfdmb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_V-Ug9nyp6XPVBIJ3tr3qww_VjwGLg6Z";
 const $ = id => document.getElementById(id);
@@ -98,124 +108,78 @@ const sbFetch = (path, opts = {}) => fetch(`${SUPABASE_URL}${path}`, {
   ...opts,
   headers: { "Content-Type":"application/json", "apikey": SUPABASE_KEY, "Authorization": `Bearer ${token||SUPABASE_KEY}`, ...(opts.headers||{}) },
 });
-
 const api = (path, opts = {}) => fetch(path, {
   ...opts,
   headers: { "Content-Type":"application/json", "Authorization": `Bearer ${token}`, ...(opts.headers||{}) },
 }).then(r => r.json());
 
-// Auth
 const checkSession = async () => {
   const stored = localStorage.getItem("sb-token");
   if (!stored) return showAuth();
   token = stored;
   const res = await sbFetch("/auth/v1/user");
   if (!res.ok) { localStorage.removeItem("sb-token"); return showAuth(); }
-  const user = await res.json();
-  showCampaigns(user);
+  showCampaigns(await res.json());
 };
-
-const showAuth = () => {
-  $("auth-wrap").style.display = "flex";
-  $("campaigns-page").style.display = "none";
-};
-
+const showAuth = () => { $("auth-wrap").style.display="flex"; $("campaigns-page").style.display="none"; };
 const showCampaigns = (user) => {
-  $("auth-wrap").style.display = "none";
-  $("campaigns-page").style.display = "block";
-  $("nav-email").textContent = user.email;
-  $("btn-logout").style.display = "block";
+  $("auth-wrap").style.display="none"; $("campaigns-page").style.display="block";
+  $("nav-email").textContent=user.email; $("btn-logout").style.display="block";
   loadCampaigns();
 };
-
 $("auth-btn").onclick = () => {
   window.location.href = `${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(window.location.origin + "/")}`;
 };
-
 $("btn-logout").onclick = () => {
-  localStorage.removeItem("sb-token");
-  localStorage.removeItem("active-campaign-id");
-  localStorage.removeItem("active-campaign-name");
-  localStorage.removeItem("active-session-id");
-  localStorage.removeItem("active-session-name");
-  token = null;
-  showAuth();
+  ["sb-token","active-campaign-id","active-campaign-name","active-session-id","active-session-name"].forEach(k=>localStorage.removeItem(k));
+  token=null; showAuth();
 };
 
-// Handle OAuth token in URL hash
-const hash = new URLSearchParams(window.location.hash.replace("#", ""));
+const hash = new URLSearchParams(window.location.hash.replace("#",""));
 const accessToken = hash.get("access_token");
 if (accessToken) {
-  token = accessToken;
-  localStorage.setItem("sb-token", token);
-  window.history.replaceState({}, "", "/");
-  sbFetch("/auth/v1/user").then(r => r.json()).then(showCampaigns);
-} else {
-  checkSession();
-}
+  token=accessToken; localStorage.setItem("sb-token",token);
+  window.history.replaceState({},""," /");
+  sbFetch("/auth/v1/user").then(r=>r.json()).then(showCampaigns);
+} else { checkSession(); }
 
-// Campaigns
 const loadCampaigns = async () => {
   const data = await api("/api/campaigns");
   const list = $("campaigns-list");
-  if (!Array.isArray(data) || data.length === 0) {
-    list.innerHTML = '<div class="empty">Нет кампаний.<br>Создай первую!</div>';
-    return;
-  }
-  list.innerHTML = "";
+  if (!Array.isArray(data)||data.length===0) { list.innerHTML='<div class="empty">Нет кампаний.<br>Создай первую!</div>'; return; }
+  list.innerHTML="";
   data.forEach(c => {
-    const card = document.createElement("div");
-    card.className = "card";
-    const d = new Date(c.created_at);
-    card.innerHTML = `
+    const card=document.createElement("div"); card.className="card";
+    const d=new Date(c.created_at);
+    card.innerHTML=`
       <div class="card-info" onclick="openCampaign('${c.id}','${c.name.replace(/'/g,"\\'")}')">
         <div class="card-name">${c.name}</div>
-        ${c.description ? `<div class="card-desc">${c.description}</div>` : ""}
+        ${c.description?`<div class="card-desc">${c.description}</div>`:""}
         <div class="card-meta">${d.toLocaleDateString("ru")}</div>
       </div>
       <div class="card-actions">
         <button class="btn primary" onclick="openCampaign('${c.id}','${c.name.replace(/'/g,"\\'")}')">Открыть</button>
         <button class="btn" onclick="openCampaignSettings(event,'${c.id}','${c.name.replace(/'/g,"\\'")}')">⚙</button>
         <button class="btn danger" onclick="deleteCampaign(event,'${c.id}')">×</button>
-      </div>
-    `;
+      </div>`;
     list.appendChild(card);
   });
 };
+const openCampaignSettings=(e,id,name)=>{e.stopPropagation();localStorage.setItem("active-campaign-id",id);localStorage.setItem("active-campaign-name",name);window.location.href="/settings.html";};
+const openCampaign=(id,name)=>{localStorage.setItem("active-campaign-id",id);localStorage.setItem("active-campaign-name",name);window.location.href="/campaign.html";};
+const deleteCampaign=async(e,id)=>{e.stopPropagation();if(!confirm("Удалить кампанию и все её сессии?"))return;await api(`/api/campaigns?id=${id}`,{method:"DELETE"});loadCampaigns();};
 
-const openCampaignSettings = (e, id, name) => {
-  e.stopPropagation();
-  localStorage.setItem("active-campaign-id", id);
-  localStorage.setItem("active-campaign-name", name);
-  window.location.href = "/settings.html";
-};
-
-const openCampaign = (id, name) => {
-  localStorage.setItem("active-campaign-id", id);
-  localStorage.setItem("active-campaign-name", name);
-  window.location.href = "/campaign.html";
-};
-
-const deleteCampaign = async (e, id) => {
-  e.stopPropagation();
-  if (!confirm("Удалить кампанию и все её сессии?")) return;
-  await api(`/api/campaigns?id=${id}`, { method: "DELETE" });
-  loadCampaigns();
-};
-
-// Modal
-$("btn-new-campaign").onclick = () => { $("modal-campaign").classList.add("open"); $("new-campaign-name").focus(); };
-$("modal-campaign-cancel").onclick = () => $("modal-campaign").classList.remove("open");
-$("modal-campaign-create").onclick = async () => {
-  const name = $("new-campaign-name").value.trim() || "Новая кампания";
-  const description = $("new-campaign-desc").value.trim();
-  const data = await api("/api/campaigns", { method:"POST", body: JSON.stringify({ name, description }) });
+$("btn-new-campaign").onclick=()=>{$("modal-campaign").classList.add("open");$("new-campaign-name").focus();};
+$("modal-campaign-cancel").onclick=()=>$("modal-campaign").classList.remove("open");
+$("modal-campaign-create").onclick=async()=>{
+  const name=$("new-campaign-name").value.trim()||"Новая кампания";
+  const description=$("new-campaign-desc").value.trim();
+  const data=await api("/api/campaigns",{method:"POST",body:JSON.stringify({name,description})});
   $("modal-campaign").classList.remove("open");
-  $("new-campaign-name").value = "";
-  $("new-campaign-desc").value = "";
-  if (data.id) openCampaign(data.id, data.name);
+  $("new-campaign-name").value=""; $("new-campaign-desc").value="";
+  if(data.id)openCampaign(data.id,data.name);
 };
-$("new-campaign-name").onkeydown = e => { if (e.key === "Enter") $("modal-campaign-create").click(); };
+$("new-campaign-name").onkeydown=e=>{if(e.key==="Enter")$("modal-campaign-create").click();};
 </script>
 </body>
 </html>
