@@ -15,17 +15,17 @@ const getBody = (req) => new Promise((resolve, reject) => {
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "OPTIONS") return res.status(200).end();
 
   const url = new URL(req.url, "http://x");
   const code = url.searchParams.get("code");
 
-// GET — получить инфо по коду (публичный, без авторизации)
+  // GET — получить инфо по коду (публичный)
   if (req.method === "GET" && code) {
     const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
-    
+
     const { data: invite, error } = await sb
       .from("session_invites")
       .select("*")
@@ -47,7 +47,7 @@ export default async function handler(req, res) {
     return res.status(200).json(invite);
   }
 
-  // POST — создать инвайт (требует авторизации)
+  // POST — создать инвайт
   if (req.method === "POST") {
     const token = req.headers.authorization?.replace("Bearer ", "");
     if (!token) return res.status(401).json({ error: "Unauthorized" });
@@ -56,13 +56,13 @@ export default async function handler(req, res) {
     if (!user) return res.status(401).json({ error: "Unauthorized" });
 
     const body = await getBody(req);
-    const code = Math.random().toString(36).substring(2, 14);
+    const newCode = Math.random().toString(36).substring(2, 14);
 
     const { data, error } = await sb
       .from("session_invites")
       .insert({
         session_id: body.session_id,
-        code,
+        code: newCode,
         role: body.role || "player",
         expires_at: body.expires_at || null,
       })
@@ -76,12 +76,27 @@ export default async function handler(req, res) {
   if (req.method === "PATCH") {
     const token = req.headers.authorization?.replace("Bearer ", "");
     if (!token) return res.status(401).json({ error: "Unauthorized" });
+    if (!code) return res.status(400).json({ error: "code required" });
+
     const sb = getSupabase(token);
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return res.status(401).json({ error: "Unauthorized" });
+
     const body = await getBody(req);
+
+    // Сначала читаем текущее значение uses
+    const { data: current } = await sb
+      .from("session_invites")
+      .select("uses")
+      .eq("code", code)
+      .single();
 
     const { data, error } = await sb
       .from("session_invites")
-      .update({ used_by: body.used_by, uses: sb.raw("uses + 1") })
+      .update({
+        used_by: body.used_by || user.id,
+        uses: (current?.uses || 0) + 1,
+      })
       .eq("code", code)
       .select().single();
 
