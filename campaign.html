@@ -143,50 +143,34 @@ const sbFetch = (path, opts = {}) => fetch(`${SUPABASE_URL}${path}`, {
 const loadMembers = async () => {
   const grid = $("members-grid");
   try {
-    // Владелец кампании
     const campaigns = await api("/api/campaigns");
     const campaign = (campaigns || []).find(c => c.id === CAMPAIGN_ID);
     const ownerId = campaign?.user_id;
 
-    // Участники через инвайты
+    // Инвайты с used_by
     const invites = await sbFetch(`/rest/v1/session_invites?select=used_by&campaign_id=eq.${CAMPAIGN_ID}&used_by=not.is.null`);
-    const memberIds = [...new Set((invites || []).map(i => i.used_by).filter(Boolean))];
+    const memberIds = [...new Set([
+      ...(ownerId ? [ownerId] : []),
+      ...(invites || []).map(i => i.used_by).filter(Boolean)
+    ])];
 
-    // Получаем email из auth через profiles
-    const members = [];
+    // Загружаем профили
+    const profiles = await sbFetch(`/rest/v1/profiles?select=id,email,display_name&id=in.(${memberIds.join(",")})`);
 
-    // Владелец
-    if (ownerId) {
-      const ownerProfile = await sbFetch(`/rest/v1/profiles?select=*&id=eq.${ownerId}`);
-      const ownerAuth = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-        headers: { "apikey":SUPABASE_KEY, "Authorization":`Bearer ${TOKEN}` }
-      }).then(r => r.json());
-      members.push({ id: ownerId, email: ownerAuth.email || ownerId.slice(0,8), role: "dm" });
-    }
-
-    // Участники
-    for (const uid of memberIds) {
-      if (uid !== ownerId) {
-        members.push({ id: uid, email: uid.slice(0,8)+"...", role: "player" });
-      }
-    }
-
-    $("members-count").textContent = `(${members.length})`;
-
-    if (members.length === 0) {
-      grid.innerHTML = '<div style="font-size:11px;color:var(--faint);">Нет участников</div>';
-      return;
-    }
-
+    $("members-count").textContent = `(${memberIds.length})`;
     grid.innerHTML = "";
-    members.forEach(m => {
+
+    memberIds.forEach(uid => {
+      const profile = (profiles || []).find(p => p.id === uid);
+      const label = profile?.display_name || profile?.email?.split("@")[0] || uid.slice(0,8);
+      const role = uid === ownerId ? "dm" : "player";
       const card = document.createElement("div");
       card.className = "member-card";
       card.innerHTML = `
         <div class="member-avatar">◎</div>
         <div class="member-info">
-          <div class="member-email">${m.email}</div>
-          <div class="member-role ${m.role === "dm" ? "dm" : ""}">${m.role === "dm" ? "Мастер" : "Игрок"}</div>
+          <div class="member-email">${label}</div>
+          <div class="member-role ${role === "dm" ? "dm" : ""}">${role === "dm" ? "Мастер" : "Игрок"}</div>
         </div>
       `;
       grid.appendChild(card);
