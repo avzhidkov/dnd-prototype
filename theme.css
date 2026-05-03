@@ -14,3 +14,7 @@
   --blue:#2a6fa8; --red:#b03020; --red2:rgba(176,48,32,.1);
   --input-bg:#fafaf7; --input-border:#ccc;
 }
+
+/* Base font scale */
+html { font-size: 16px; }
+body { font-size: 14px; }
