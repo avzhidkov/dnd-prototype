@@ -72,5 +72,22 @@ export default async function handler(req, res) {
     return res.status(201).json(data);
   }
 
+  // PATCH — отметить инвайт использованным
+  if (req.method === "PATCH") {
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ error: "Unauthorized" });
+    const sb = getSupabase(token);
+    const body = await getBody(req);
+
+    const { data, error } = await sb
+      .from("session_invites")
+      .update({ used_by: body.used_by, uses: sb.raw("uses + 1") })
+      .eq("code", code)
+      .select().single();
+
+    if (error) return res.status(500).json({ error: error.message });
+    return res.status(200).json(data);
+  }
+
   res.status(405).json({ error: "Method not allowed" });
 }

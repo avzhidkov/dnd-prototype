@@ -29,14 +29,27 @@ export default async function handler(req, res) {
   const url = new URL(req.url, "http://x");
   const id = url.searchParams.get("id");
 
-  if (req.method === "GET") {
-    const { data, error } = await sb
+if (req.method === "GET") {
+    // Свои кампании
+    const { data: owned, error } = await sb
       .from("campaigns")
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
     if (error) return res.status(500).json({ error: error.message });
-    return res.status(200).json(data);
+
+    // Кампании через инвайт — сессии где пользователь принял инвайт
+    const { data: joinedSessions } = await sb
+      .from("session_invites")
+      .select("sessions(campaign_id, campaigns(*))")
+      .eq("used_by", user.id);
+
+    const joined = (joinedSessions || [])
+      .map(s => s.sessions?.campaigns)
+      .filter(Boolean)
+      .filter(c => c && !(owned||[]).find(o => o.id === c.id));
+
+    return res.status(200).json([...(owned||[]), ...joined]);
   }
 
   if (req.method === "POST") {

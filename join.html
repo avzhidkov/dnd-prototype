@@ -137,14 +137,11 @@ const joinCampaign = async (invite, user) => {
   $("btn-join").disabled = true;
 
   try {
-    // Добавляем участника в сессию
-    await fetch("/api/sessions", {
+    // Отмечаем инвайт как использованный
+    await fetch(`/api/invites?code=${invite.code}`, {
       method: "PATCH",
       headers: { "Content-Type":"application/json", "Authorization":`Bearer ${token}` },
-      body: JSON.stringify({
-        id: invite.session_id,
-        participant: { user_id: user.id, role: invite.role || "player" }
-      }),
+      body: JSON.stringify({ used_by: user.id }),
     });
 
     // Сохраняем данные кампании
