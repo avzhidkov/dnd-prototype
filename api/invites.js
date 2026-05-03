@@ -22,19 +22,29 @@ export default async function handler(req, res) {
   const url = new URL(req.url, "http://x");
   const code = url.searchParams.get("code");
 
-  // GET — получить инфо по коду (публичный, без авторизации)
+// GET — получить инфо по коду (публичный, без авторизации)
   if (req.method === "GET" && code) {
     const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
-    const { data, error } = await sb
+    
+    const { data: invite, error } = await sb
       .from("session_invites")
-      .select("*, sessions(name, campaign_id, campaigns(name))")
+      .select("*")
       .eq("code", code)
       .single();
-    if (error || !data) return res.status(404).json({ error: "Инвайт не найден" });
-    if (data.expires_at && new Date(data.expires_at) < new Date()) {
+
+    if (error || !invite) return res.status(404).json({ error: "Инвайт не найден" });
+    if (invite.expires_at && new Date(invite.expires_at) < new Date()) {
       return res.status(410).json({ error: "Инвайт истёк" });
     }
-    return res.status(200).json(data);
+
+    const { data: session } = await sb
+      .from("sessions")
+      .select("name, campaign_id, campaigns(name)")
+      .eq("id", invite.session_id)
+      .single();
+
+    invite.sessions = session;
+    return res.status(200).json(invite);
   }
 
   // POST — создать инвайт (требует авторизации)
