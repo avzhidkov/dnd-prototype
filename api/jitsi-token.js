@@ -1,16 +1,15 @@
-import jwt from 'jsonwebtoken';
-import { createClient } from '@supabase/supabase-js';
+const jwt = require('jsonwebtoken');
+const { createClient } = require('@supabase/supabase-js');
 
 const APP_ID = 'dreamstory';
 const APP_SECRET = 'ds_jwt_secret_2026_xK9mP3';
 const JITSI_HOST = 'room.dream-story.ru';
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
   const { room, characterName, userId } = req.body;
 
-  // Проверяем что пользователь авторизован через Supabase
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -28,7 +27,7 @@ export default async function handler(req, res) {
     iss: APP_ID,
     sub: JITSI_HOST,
     room: room,
-    exp: Math.floor(Date.now() / 1000) + 60 * 60 * 8, // 8 часов
+    exp: Math.floor(Date.now() / 1000) + 60 * 60 * 8,
     context: {
       user: {
         id: userId || user.id,
@@ -39,4 +38,4 @@ export default async function handler(req, res) {
   }, APP_SECRET);
 
   res.json({ token });
-}
+};

@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "formidable": "^3.5.1",
+    "@supabase/supabase-js": "^2.45.0",
     "form-data": "^4.0.0",
-    "@supabase/supabase-js": "^2.45.0"
+    "formidable": "^3.5.1",
+    "jsonwebtoken": "^9.0.3"
   }
 }
