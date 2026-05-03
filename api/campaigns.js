@@ -38,16 +38,34 @@ if (req.method === "GET") {
       .order("created_at", { ascending: false });
     if (error) return res.status(500).json({ error: error.message });
 
-    // Кампании через инвайт — сессии где пользователь принял инвайт
-    const { data: joinedSessions } = await sb
+    // Инвайты пользователя
+    const { data: invites } = await sb
       .from("session_invites")
-      .select("sessions(campaign_id, campaigns(*))")
+      .select("session_id")
       .eq("used_by", user.id);
 
-    const joined = (joinedSessions || [])
-      .map(s => s.sessions?.campaigns)
-      .filter(Boolean)
-      .filter(c => c && !(owned||[]).find(o => o.id === c.id));
+    let joined = [];
+    if (invites && invites.length > 0) {
+      const sessionIds = invites.map(i => i.session_id);
+      
+      // Получаем campaign_id из сессий
+      const { data: sessions } = await sb
+        .from("sessions")
+        .select("campaign_id")
+        .in("id", sessionIds);
+
+      const campaignIds = [...new Set((sessions || []).map(s => s.campaign_id).filter(Boolean))];
+      
+      if (campaignIds.length > 0) {
+        const { data: joinedCampaigns } = await sb
+          .from("campaigns")
+          .select("*")
+          .in("id", campaignIds)
+          .not("user_id", "eq", user.id);
+        
+        joined = joinedCampaigns || [];
+      }
+    }
 
     return res.status(200).json([...(owned||[]), ...joined]);
   }
