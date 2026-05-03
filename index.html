@@ -141,10 +141,17 @@ body { font-family: monospace; background: var(--bg); color: var(--text); min-he
     <span class="section-header-title">ПРОФИЛЬ</span>
   </div>
 
-  <div class="profile-box">
+<div class="profile-box">
     <div class="profile-box-title">АККАУНТ</div>
     <div style="font-size:13px;color:var(--text);margin-bottom:.5rem;" id="profile-email"></div>
-    <div style="font-size:11px;color:var(--faint);" id="profile-since"></div>
+    <div style="font-size:11px;color:var(--faint);margin-bottom:1rem;" id="profile-since"></div>
+    <div style="font-size:10px;letter-spacing:.08em;color:var(--muted);margin-bottom:.35rem;">КАК ТЕБЯ ЗОВУТ</div>
+    <div style="display:flex;gap:.5rem;">
+      <input type="text" id="profile-display-name" placeholder="Имя или ник..." 
+        style="flex:1;background:var(--input-bg);border:1px solid var(--input-border);border-radius:3px;padding:.45rem .75rem;color:var(--text);font-family:monospace;font-size:12px;outline:none;" />
+      <button class="btn primary" id="btn-save-name" style="flex-shrink:0;">Сохранить</button>
+    </div>
+    <div style="font-size:11px;color:var(--accent);opacity:0;transition:opacity .3s;margin-top:.4rem;" id="name-saved">Сохранено ✓</div>
   </div>
 
   <div class="profile-box">
@@ -256,6 +263,18 @@ const logout = () => {
 };
 $("btn-logout").onclick = logout;
 $("profile-logout").onclick = logout;
+$("btn-save-name").onclick = async () => {
+  const name = $("profile-display-name").value.trim();
+  if (!name) return;
+  await sbFetch(`/rest/v1/profiles?id=eq.${currentUser.id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ display_name: name }),
+    headers: { "Prefer": "return=minimal" },
+  });
+  const el = $("name-saved");
+  el.style.opacity = 1;
+  setTimeout(() => { el.style.opacity = 0; }, 2500);
+};
 
 const hash = new URLSearchParams(window.location.hash.replace("#",""));
 const accessToken = hash.get("access_token");
@@ -302,6 +321,13 @@ const loadProfile = async () => {
   charsGrid.innerHTML = '<div class="empty" style="padding:1.5rem;grid-column:1/-1;">Загрузка...</div>';
 
   try {
+    // Загружаем display_name
+    const profileRes = await sbFetch(`/rest/v1/profiles?select=display_name&id=eq.${currentUser.id}`);
+    const profileData = Array.isArray(profileRes) ? profileRes[0] : null;
+    if (profileData?.display_name) {
+      $("profile-display-name").value = profileData.display_name;
+    }
+
     const campaigns = await api("/api/campaigns");
     const campaignMap = {};
     (campaigns || []).forEach(c => { campaignMap[c.id] = c.name; });
