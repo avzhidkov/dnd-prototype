@@ -31,39 +31,14 @@ export default async function handler(req, res) {
 
 if (req.method === "GET") {
     const campaignId = url.searchParams.get("campaign_id");
-    let query = sb.from("sessions").select(`
-      *,
-      events:events(count),
-      images:events(count),
-      transcripts:transcripts(count)
-    `).eq("user_id", user.id).order("created_at", { ascending: false });
+    let query = sb.from("sessions")
+      .select("*")
+      .order("created_at", { ascending: false });
     if (campaignId) query = query.eq("campaign_id", campaignId);
+    else query = query.eq("user_id", user.id);
     const { data, error } = await query;
     if (error) return res.status(500).json({ error: error.message });
-
-    // Получаем последнее событие для каждой сессии
-    if (Array.isArray(data) && data.length > 0) {
-      const sessionIds = data.map(s => s.id);
-      const { data: lastEvents } = await sb
-        .from("events")
-        .select("session_id, description, created_at")
-        .in("session_id", sessionIds)
-        .order("created_at", { ascending: false });
-
-      const lastEventMap = {};
-      (lastEvents || []).forEach(e => {
-        if (!lastEventMap[e.session_id]) lastEventMap[e.session_id] = e;
-      });
-
-      data.forEach(s => {
-        s.event_count = s.events?.[0]?.count || 0;
-        s.image_count = (lastEvents || []).filter(e => e.session_id === s.id).length;
-        s.last_event = lastEventMap[s.id]?.description || null;
-        delete s.events; delete s.images; delete s.transcripts;
-      });
-    }
-
-    return res.status(200).json(data);
+    return res.status(200).json(data || []);
   }
 
   if (req.method === "POST") {
