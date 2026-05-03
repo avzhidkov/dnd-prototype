@@ -39,13 +39,14 @@ export default async function handler(req, res) {
     return res.status(200).json(data);
   }
 
-  // POST — создать персонажа
+// POST — создать персонажа
   if (req.method === "POST") {
     const body = await getBody(req);
     const { data, error } = await sb
       .from("characters")
       .insert({
         campaign_id: body.campaign_id,
+        user_id: body.user_id || user.id,
         name: body.name || "Новый персонаж",
         type: body.type || "pc",
         race: body.race || "",
