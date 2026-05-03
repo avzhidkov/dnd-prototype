@@ -18,9 +18,38 @@ body { font-family: monospace; background: var(--bg); color: var(--text); min-he
 .btn.danger:hover { background:var(--red2); }
 .theme-toggle { background:none; border:1px solid var(--border); border-radius:3px; padding:.3rem .6rem; cursor:pointer; font-size:13px; color:var(--dim); transition:all .2s; }
 .theme-toggle:hover { border-color:var(--accent); color:var(--accent); }
-.page { padding:2rem 1.5rem; max-width:700px; margin:0 auto; }
-.page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; }
-.page-title { font-size:11px; letter-spacing:.15em; color:var(--dim); }
+
+/* Auth */
+.auth-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80vh; gap:1.5rem; }
+.auth-logo { font-size:32px; letter-spacing:.2em; color:var(--accent); margin-bottom:.5rem; }
+.auth-tagline { font-size:11px; color:var(--faint); letter-spacing:.1em; }
+.auth-box { background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:2rem; width:100%; max-width:340px; }
+.auth-btn { width:100%; font-family:monospace; font-size:12px; letter-spacing:.06em; padding:.75rem; border:1px solid rgba(74,175,114,.5); background:transparent; color:var(--accent); cursor:pointer; border-radius:3px; transition:all .2s; display:flex; align-items:center; justify-content:center; gap:.5rem; }
+.auth-btn:hover { background:var(--accent2); }
+
+/* Home screen */
+.home { padding:2.5rem 1.5rem; max-width:860px; margin:0 auto; }
+.home-greeting { font-size:11px; color:var(--faint); letter-spacing:.1em; margin-bottom:2rem; }
+.sections-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:2rem; }
+@media(max-width:600px){ .sections-grid { grid-template-columns:1fr; } }
+.section-card { background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:1.75rem; cursor:pointer; transition:all .25s; display:flex; flex-direction:column; gap:.75rem; position:relative; overflow:hidden; }
+.section-card:hover { border-color:var(--accent); transform:translateY(-1px); }
+.section-card.disabled { opacity:.4; cursor:default; pointer-events:none; }
+.section-card.disabled:hover { transform:none; border-color:var(--border); }
+.section-icon { font-size:24px; }
+.section-title { font-size:14px; letter-spacing:.08em; color:var(--text); }
+.section-desc { font-size:11px; color:var(--faint); line-height:1.6; }
+.section-badge { position:absolute; top:.75rem; right:.75rem; font-size:9px; letter-spacing:.08em; padding:.2rem .5rem; border-radius:2px; border:1px solid; }
+.section-badge.soon { color:var(--faint); border-color:var(--border); }
+.section-badge.new { color:var(--accent); border-color:rgba(74,175,114,.4); }
+
+/* Campaigns list (inside Parties section) */
+.section-page { display:none; padding:2rem 1.5rem; max-width:700px; margin:0 auto; }
+.section-page.active { display:block; }
+.section-header { display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem; }
+.back-btn { font-family:monospace; font-size:10px; color:var(--dim); background:none; border:1px solid var(--border); border-radius:3px; padding:.3rem .7rem; cursor:pointer; transition:all .2s; text-decoration:none; }
+.back-btn:hover { color:var(--text); border-color:var(--accent); }
+.section-header-title { font-size:11px; letter-spacing:.15em; color:var(--dim); flex:1; }
 .list { display:flex; flex-direction:column; gap:.6rem; }
 .card { background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:1rem 1.25rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; transition:border-color .2s; }
 .card:hover { border-color:rgba(74,175,114,.3); }
@@ -37,11 +66,6 @@ body { font-family: monospace; background: var(--bg); color: var(--text); min-he
 .modal-inp { width:100%; background:var(--input-bg); border:1px solid var(--input-border); border-radius:3px; padding:.5rem .75rem; color:var(--text); font-family:monospace; font-size:13px; outline:none; transition:border-color .2s; }
 .modal-inp:focus { border-color:var(--accent); }
 .modal-row { display:flex; gap:.75rem; }
-.auth-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80vh; gap:1.5rem; }
-.auth-title { font-size:13px; letter-spacing:.15em; color:var(--dim); }
-.auth-box { background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:2rem; width:100%; max-width:340px; }
-.auth-btn { width:100%; font-family:monospace; font-size:12px; letter-spacing:.06em; padding:.75rem; border:1px solid rgba(74,175,114,.5); background:transparent; color:var(--accent); cursor:pointer; border-radius:3px; transition:all .2s; display:flex; align-items:center; justify-content:center; gap:.5rem; }
-.auth-btn:hover { background:var(--accent2); }
 </style>
 </head>
 <body>
@@ -55,8 +79,12 @@ body { font-family: monospace; background: var(--bg); color: var(--text); min-he
   </div>
 </nav>
 
+<!-- Auth -->
 <div class="auth-wrap" id="auth-wrap" style="display:none;">
-  <span class="auth-title">// DREAMSTORY</span>
+  <div style="text-align:center;">
+    <div class="auth-logo">✦</div>
+    <div class="auth-tagline">DREAMSTORY</div>
+  </div>
   <div class="auth-box">
     <button class="auth-btn" id="auth-btn">
       <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
@@ -65,21 +93,70 @@ body { font-family: monospace; background: var(--bg); color: var(--text); min-he
   </div>
 </div>
 
-<div class="page" id="campaigns-page" style="display:none;">
-  <div class="page-header">
-    <span class="page-title">МОИ КАМПАНИИ</span>
-    <button class="btn primary" id="btn-new-campaign">+ Новая кампания</button>
+<!-- Home -->
+<div class="home" id="home-page" style="display:none;">
+  <div class="home-greeting" id="home-greeting"></div>
+  <div class="sections-grid">
+    <div class="section-card" onclick="showSection('parties')">
+      <div class="section-icon">⚔</div>
+      <div class="section-title">ПАРТИИ</div>
+      <div class="section-desc">Групповые кампании, D&D сессии, живой нарратив с визуализацией</div>
+    </div>
+    <div class="section-card disabled">
+      <div class="section-badge soon">СКОРО</div>
+      <div class="section-icon">✦</div>
+      <div class="section-title">ОДИНОЧНАЯ ИГРА</div>
+      <div class="section-desc">Интерактивные истории с ИИ-нарратором, визуал и голос</div>
+    </div>
+    <div class="section-card" onclick="showSection('profile')">
+      <div class="section-icon">◎</div>
+      <div class="section-title">ПРОФИЛЬ</div>
+      <div class="section-desc">Настройки аккаунта, персонажи, статистика сессий</div>
+    </div>
+    <div class="section-card disabled">
+      <div class="section-badge soon">СКОРО</div>
+      <div class="section-icon">◈</div>
+      <div class="section-title">МАГАЗИН</div>
+      <div class="section-desc">Сценарии и нарративы от авторов сообщества</div>
+    </div>
+  </div>
+</div>
+
+<!-- Parties section -->
+<div class="section-page" id="section-parties">
+  <div class="section-header">
+    <button class="back-btn" onclick="showHome()">← Главная</button>
+    <span class="section-header-title">МОИ ПАРТИИ</span>
+    <button class="btn primary" id="btn-new-campaign">+ Новая</button>
   </div>
   <div class="list" id="campaigns-list">
     <div class="empty">Загрузка...</div>
   </div>
 </div>
 
+<!-- Profile section -->
+<div class="section-page" id="section-profile">
+  <div class="section-header">
+    <button class="back-btn" onclick="showHome()">← Главная</button>
+    <span class="section-header-title">ПРОФИЛЬ</span>
+  </div>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:1.5rem;margin-bottom:1rem;">
+    <div style="font-size:10px;letter-spacing:.1em;color:var(--dim);margin-bottom:1rem;padding-bottom:.6rem;border-bottom:1px solid var(--border2);">АККАУНТ</div>
+    <div style="font-size:13px;color:var(--text);margin-bottom:.5rem;" id="profile-email"></div>
+    <div style="font-size:11px;color:var(--faint);" id="profile-since"></div>
+  </div>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:1.5rem;">
+    <div style="font-size:10px;letter-spacing:.1em;color:var(--dim);margin-bottom:1rem;padding-bottom:.6rem;border-bottom:1px solid var(--border2);">ДЕЙСТВИЯ</div>
+    <button class="btn danger" id="profile-logout" style="font-size:11px;padding:.45rem 1rem;">Выйти из аккаунта</button>
+  </div>
+</div>
+
+<!-- New campaign modal -->
 <div class="modal-bg" id="modal-campaign">
   <div class="modal">
-    <span class="modal-title">НОВАЯ КАМПАНИЯ</span>
-    <input class="modal-inp" type="text" id="new-campaign-name" placeholder="Название кампании..." />
-    <input class="modal-inp" type="text" id="new-campaign-desc" placeholder="Краткое описание (необязательно)" />
+    <span class="modal-title">НОВАЯ ПАРТИЯ</span>
+    <input class="modal-inp" type="text" id="new-campaign-name" placeholder="Название партии..." />
+    <input class="modal-inp" type="text" id="new-campaign-desc" placeholder="Описание (необязательно)" />
     <div class="modal-row">
       <button class="btn primary" id="modal-campaign-create" style="flex:1;">Создать</button>
       <button class="btn" id="modal-campaign-cancel">Отмена</button>
@@ -103,6 +180,7 @@ const SUPABASE_URL = "https://mbysjfsuqeqjcedgfdmb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_V-Ug9nyp6XPVBIJ3tr3qww_VjwGLg6Z";
 const $ = id => document.getElementById(id);
 let token = null;
+let currentUser = null;
 
 const sbFetch = (path, opts = {}) => fetch(`${SUPABASE_URL}${path}`, {
   ...opts,
@@ -113,48 +191,86 @@ const api = (path, opts = {}) => fetch(path, {
   headers: { "Content-Type":"application/json", "Authorization": `Bearer ${token}`, ...(opts.headers||{}) },
 }).then(r => r.json());
 
+// ── Auth ──────────────────────────────────────
 const checkSession = async () => {
   const stored = localStorage.getItem("sb-token");
   if (!stored) return showAuth();
   token = stored;
   const res = await sbFetch("/auth/v1/user");
   if (!res.ok) { localStorage.removeItem("sb-token"); return showAuth(); }
-  showCampaigns(await res.json());
+  showHome(await res.json());
 };
-const showAuth = () => { $("auth-wrap").style.display="flex"; $("campaigns-page").style.display="none"; };
-const showCampaigns = (user) => {
-  $("auth-wrap").style.display="none"; $("campaigns-page").style.display="block";
-  $("nav-email").textContent=user.email; $("btn-logout").style.display="block";
-  loadCampaigns();
+
+const showAuth = () => {
+  $("auth-wrap").style.display = "flex";
+  $("home-page").style.display = "none";
+  document.querySelectorAll(".section-page").forEach(p => p.classList.remove("active"));
 };
+
+const showHome = (user) => {
+  if (user) {
+    currentUser = user;
+    $("nav-email").textContent = user.email;
+    $("btn-logout").style.display = "block";
+    $("profile-email").textContent = user.email;
+    $("profile-since").textContent = `Участник с ${new Date(user.created_at).toLocaleDateString("ru")}`;
+  }
+  $("auth-wrap").style.display = "none";
+  $("home-page").style.display = "block";
+  document.querySelectorAll(".section-page").forEach(p => p.classList.remove("active"));
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Доброе утро" : hour < 18 ? "Добрый день" : "Добрый вечер";
+  $("home-greeting").textContent = `${greeting}, ${user?.email?.split("@")[0] || ""}`;
+};
+
+const showSection = (name) => {
+  $("home-page").style.display = "none";
+  document.querySelectorAll(".section-page").forEach(p => p.classList.remove("active"));
+  $(`section-${name}`).classList.add("active");
+  if (name === "parties") loadCampaigns();
+};
+
 $("auth-btn").onclick = () => {
   window.location.href = `${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(window.location.origin + "/")}`;
 };
-$("btn-logout").onclick = () => {
-  ["sb-token","active-campaign-id","active-campaign-name","active-session-id","active-session-name"].forEach(k=>localStorage.removeItem(k));
-  token=null; showAuth();
-};
 
+const logout = () => {
+  ["sb-token","active-campaign-id","active-campaign-name","active-session-id","active-session-name"].forEach(k=>localStorage.removeItem(k));
+  token = null; currentUser = null;
+  showAuth();
+};
+$("btn-logout").onclick = logout;
+$("profile-logout").onclick = logout;
+
+// ── OAuth callback ────────────────────────────
 const hash = new URLSearchParams(window.location.hash.replace("#",""));
 const accessToken = hash.get("access_token");
 if (accessToken) {
-  token=accessToken; localStorage.setItem("sb-token",token);
-  window.history.replaceState({},""," /");
-  sbFetch("/auth/v1/user").then(r=>r.json()).then(showCampaigns);
-} else { checkSession(); }
+  token = accessToken;
+  localStorage.setItem("sb-token", token);
+  window.history.replaceState({}, "", "/");
+  sbFetch("/auth/v1/user").then(r => r.json()).then(showHome);
+} else {
+  checkSession();
+}
 
+// ── Campaigns ─────────────────────────────────
 const loadCampaigns = async () => {
   const data = await api("/api/campaigns");
   const list = $("campaigns-list");
-  if (!Array.isArray(data)||data.length===0) { list.innerHTML='<div class="empty">Нет кампаний.<br>Создай первую!</div>'; return; }
-  list.innerHTML="";
+  if (!Array.isArray(data) || data.length === 0) {
+    list.innerHTML = '<div class="empty">Нет партий.<br>Создай первую!</div>';
+    return;
+  }
+  list.innerHTML = "";
   data.forEach(c => {
-    const card=document.createElement("div"); card.className="card";
-    const d=new Date(c.created_at);
-    card.innerHTML=`
+    const card = document.createElement("div");
+    card.className = "card";
+    const d = new Date(c.created_at);
+    card.innerHTML = `
       <div class="card-info" onclick="openCampaign('${c.id}','${c.name.replace(/'/g,"\\'")}')">
         <div class="card-name">${c.name}</div>
-        ${c.description?`<div class="card-desc">${c.description}</div>`:""}
+        ${c.description ? `<div class="card-desc">${c.description}</div>` : ""}
         <div class="card-meta">${d.toLocaleDateString("ru")}</div>
       </div>
       <div class="card-actions">
@@ -165,21 +281,36 @@ const loadCampaigns = async () => {
     list.appendChild(card);
   });
 };
-const openCampaignSettings=(e,id,name)=>{e.stopPropagation();localStorage.setItem("active-campaign-id",id);localStorage.setItem("active-campaign-name",name);window.location.href="/settings.html";};
-const openCampaign=(id,name)=>{localStorage.setItem("active-campaign-id",id);localStorage.setItem("active-campaign-name",name);window.location.href="/campaign.html";};
-const deleteCampaign=async(e,id)=>{e.stopPropagation();if(!confirm("Удалить кампанию и все её сессии?"))return;await api(`/api/campaigns?id=${id}`,{method:"DELETE"});loadCampaigns();};
 
-$("btn-new-campaign").onclick=()=>{$("modal-campaign").classList.add("open");$("new-campaign-name").focus();};
-$("modal-campaign-cancel").onclick=()=>$("modal-campaign").classList.remove("open");
-$("modal-campaign-create").onclick=async()=>{
-  const name=$("new-campaign-name").value.trim()||"Новая кампания";
-  const description=$("new-campaign-desc").value.trim();
-  const data=await api("/api/campaigns",{method:"POST",body:JSON.stringify({name,description})});
-  $("modal-campaign").classList.remove("open");
-  $("new-campaign-name").value=""; $("new-campaign-desc").value="";
-  if(data.id)openCampaign(data.id,data.name);
+const openCampaignSettings = (e, id, name) => {
+  e.stopPropagation();
+  localStorage.setItem("active-campaign-id", id);
+  localStorage.setItem("active-campaign-name", name);
+  window.location.href = "/settings.html";
 };
-$("new-campaign-name").onkeydown=e=>{if(e.key==="Enter")$("modal-campaign-create").click();};
+const openCampaign = (id, name) => {
+  localStorage.setItem("active-campaign-id", id);
+  localStorage.setItem("active-campaign-name", name);
+  window.location.href = "/campaign.html";
+};
+const deleteCampaign = async (e, id) => {
+  e.stopPropagation();
+  if (!confirm("Удалить партию и все её сессии?")) return;
+  await api(`/api/campaigns?id=${id}`, { method:"DELETE" });
+  loadCampaigns();
+};
+
+$("btn-new-campaign").onclick = () => { $("modal-campaign").classList.add("open"); $("new-campaign-name").focus(); };
+$("modal-campaign-cancel").onclick = () => $("modal-campaign").classList.remove("open");
+$("modal-campaign-create").onclick = async () => {
+  const name = $("new-campaign-name").value.trim() || "Новая партия";
+  const description = $("new-campaign-desc").value.trim();
+  const data = await api("/api/campaigns", { method:"POST", body: JSON.stringify({ name, description }) });
+  $("modal-campaign").classList.remove("open");
+  $("new-campaign-name").value = ""; $("new-campaign-desc").value = "";
+  if (data.id) openCampaign(data.id, data.name);
+};
+$("new-campaign-name").onkeydown = e => { if (e.key === "Enter") $("modal-campaign-create").click(); };
 </script>
 </body>
 </html>
