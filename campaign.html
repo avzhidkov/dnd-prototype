@@ -133,6 +133,7 @@ const loadSessions = async () => {
       <div class="card-actions">
         <button class="btn primary" onclick="openSession('${s.id}','${s.name.replace(/'/g,"\\'")}')">Открыть</button>
         <button class="btn viz" onclick="openViz('${s.id}')">Визуал</button>
+        <button class="btn" onclick="inviteToSession('${s.id}','${s.name.replace(/'/g,"\\'")}')">✉ Инвайт</button>
         <button class="btn danger" onclick="deleteSession(event,'${s.id}')">×</button>
       </div>
     `;
@@ -146,6 +147,21 @@ const openSession = (id, name) => {
   window.location.href = "/session.html";
 };
 const openViz = (id) => window.open(`/viz.html?session=${id}`, "_blank");
+const inviteToSession = async (sessionId, sessionName) => {
+  const res = await fetch("/api/invites", {
+    method: "POST",
+    headers: { "Content-Type":"application/json", "Authorization":`Bearer ${TOKEN}` },
+    body: JSON.stringify({ session_id: sessionId, role: "player" }),
+  });
+  const data = await res.json();
+  if (data.code) {
+    const link = `${window.location.origin}/join.html?code=${data.code}`;
+    await navigator.clipboard.writeText(link);
+    alert(`Ссылка скопирована!\n\n${link}`);
+  } else {
+    alert("Ошибка: " + (data.error || "unknown"));
+  }
+};
 const deleteSession = async (e, id) => {
   e.stopPropagation();
   if (!confirm("Удалить сессию и все её данные?")) return;
