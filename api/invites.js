@@ -24,7 +24,10 @@ export default async function handler(req, res) {
 
   // GET — получить инфо по коду (публичный)
   if (req.method === "GET" && code) {
-    const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+    const sb = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY
+    );
 
     const { data: invite, error } = await sb
       .from("session_invites")
