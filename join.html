@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<title>DreamStory — Присоединиться</title>
+<link rel="stylesheet" href="/theme.css" />
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:monospace; background:var(--bg); color:var(--text); min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:background .2s,color .2s; }
+.wrap { width:100%; max-width:400px; padding:2rem 1.5rem; }
+.logo { font-size:13px; letter-spacing:.18em; color:var(--accent); text-align:center; margin-bottom:2rem; }
+.card { background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:2rem; display:flex; flex-direction:column; gap:1.25rem; }
+.card-title { font-size:10px; letter-spacing:.12em; color:var(--dim); }
+.campaign-name { font-size:18px; color:var(--text); font-weight:bold; }
+.campaign-meta { font-size:12px; color:var(--faint); }
+.divider { border:none; border-top:1px solid var(--border2); }
+.status { font-size:12px; color:var(--muted); line-height:1.6; text-align:center; }
+.status.err { color:var(--red); }
+.status.ok { color:var(--accent); }
+.auth-btn { width:100%; font-family:monospace; font-size:12px; letter-spacing:.06em; padding:.85rem; border:1px solid rgba(74,175,114,.5); background:transparent; color:var(--accent); cursor:pointer; border-radius:3px; transition:all .2s; display:flex; align-items:center; justify-content:center; gap:.5rem; }
+.auth-btn:hover { background:var(--accent2); }
+.btn { font-family:monospace; font-size:11px; letter-spacing:.08em; padding:.55rem 1rem; border:1px solid var(--border); background:transparent; color:var(--muted); cursor:pointer; border-radius:3px; transition:all .2s; width:100%; }
+.btn:hover { border-color:var(--accent); color:var(--accent); }
+.btn.primary { border-color:rgba(74,175,114,.5); color:var(--accent); }
+.btn.primary:hover { background:var(--accent2); }
+.spinner { display:inline-block; width:16px; height:16px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="logo">✦ DREAMSTORY</div>
+
+  <div class="card" id="card-loading">
+    <div class="status"><span class="spinner"></span> Загружаю инвайт...</div>
+  </div>
+
+  <div class="card" id="card-invite" style="display:none;">
+    <div class="card-title">ПРИГЛАШЕНИЕ В КАМПАНИЮ</div>
+    <div>
+      <div class="campaign-name" id="invite-campaign"></div>
+      <div class="campaign-meta" id="invite-meta"></div>
+    </div>
+    <hr class="divider" />
+    <div id="invite-action"></div>
+  </div>
+
+  <div class="card" id="card-error" style="display:none;">
+    <div class="status err" id="error-msg">Инвайт не найден или истёк.</div>
+    <a href="/" class="btn" style="text-align:center;text-decoration:none;">На главную</a>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://mbysjfsuqeqjcedgfdmb.supabase.co";
+const SUPABASE_KEY = "sb_publishable_V-Ug9nyp6XPVBIJ3tr3qww_VjwGLg6Z";
+
+// Theme
+document.documentElement.setAttribute("data-theme", localStorage.getItem("theme") || "dark");
+
+const $ = id => document.getElementById(id);
+const code = new URLSearchParams(window.location.search).get("code");
+const token = localStorage.getItem("sb-token");
+
+const showError = (msg) => {
+  $("card-loading").style.display = "none";
+  $("card-invite").style.display = "none";
+  $("card-error").style.display = "flex";
+  if (msg) $("error-msg").textContent = msg;
+};
+
+const sbFetch = (path, opts = {}) => fetch(`${SUPABASE_URL}${path}`, {
+  ...opts,
+  headers: { "Content-Type":"application/json", "apikey":SUPABASE_KEY, "Authorization":`Bearer ${token||SUPABASE_KEY}`, ...(opts.headers||{}) },
+});
+
+// Проверяем инвайт
+const loadInvite = async () => {
+  if (!code) return showError("Код инвайта не указан.");
+
+  try {
+    const res = await fetch(`/api/invites?code=${code}`);
+    const invite = await res.json();
+    if (!res.ok) return showError(invite.error || "Инвайт не найден.");
+
+    const campaignName = invite.sessions?.campaigns?.name || "Кампания";
+    const sessionName  = invite.sessions?.name || "Сессия";
+
+    $("invite-campaign").textContent = campaignName;
+    $("invite-meta").textContent = `Сессия: ${sessionName} · Роль: ${invite.role || "player"}`;
+
+    $("card-loading").style.display = "none";
+    $("card-invite").style.display = "flex";
+
+    // Проверяем авторизован ли пользователь
+    if (token) {
+      const userRes = await sbFetch("/auth/v1/user");
+      if (userRes.ok) {
+        const user = await userRes.json();
+        renderJoinButton(invite, user);
+        return;
+      }
+    }
+
+    // Не авторизован — показываем вход через Google
+    renderAuthButton(invite);
+  } catch(e) {
+    showError("Ошибка загрузки инвайта.");
+  }
+};
+
+const renderAuthButton = (invite) => {
+  $("invite-action").innerHTML = `
+    <div class="status" style="margin-bottom:1rem;">Войди через Google чтобы присоединиться</div>
+    <button class="auth-btn" id="auth-btn">
+      <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Войти через Google
+    </button>
+  `;
+  $("auth-btn").onclick = () => {
+    const redirect = `${window.location.origin}/join.html?code=${code}`;
+    window.location.href = `${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirect)}`;
+  };
+};
+
+const renderJoinButton = (invite, user) => {
+  $("invite-action").innerHTML = `
+    <div class="status" style="margin-bottom:1rem;">Ты вошёл как <strong>${user.email}</strong></div>
+    <button class="btn primary" id="btn-join">Присоединиться к кампании</button>
+  `;
+  $("btn-join").onclick = () => joinCampaign(invite, user);
+};
+
+const joinCampaign = async (invite, user) => {
+  $("btn-join").textContent = "Подключаюсь...";
+  $("btn-join").disabled = true;
+
+  try {
+    // Добавляем участника в сессию
+    await fetch("/api/sessions", {
+      method: "PATCH",
+      headers: { "Content-Type":"application/json", "Authorization":`Bearer ${token}` },
+      body: JSON.stringify({
+        id: invite.session_id,
+        participant: { user_id: user.id, role: invite.role || "player" }
+      }),
+    });
+
+    // Сохраняем данные кампании
+    const campaignId = invite.sessions?.campaign_id;
+    const campaignName = invite.sessions?.campaigns?.name;
+    if (campaignId) {
+      localStorage.setItem("active-campaign-id", campaignId);
+      localStorage.setItem("active-campaign-name", campaignName || "Кампания");
+      localStorage.setItem("active-session-id", invite.session_id);
+      localStorage.setItem("active-session-name", invite.sessions?.name || "Сессия");
+    }
+
+    $("invite-action").innerHTML = `
+      <div class="status ok" style="margin-bottom:1rem;">✓ Ты в кампании!</div>
+      <a href="/campaign.html" class="btn primary" style="text-align:center;text-decoration:none;">Открыть кампанию</a>
+    `;
+  } catch(e) {
+    $("btn-join").textContent = "Ошибка — попробуй снова";
+    $("btn-join").disabled = false;
+  }
+};
+
+// Handle OAuth callback
+const hash = new URLSearchParams(window.location.hash.replace("#",""));
+const accessToken = hash.get("access_token");
+if (accessToken) {
+  localStorage.setItem("sb-token", accessToken);
+  window.history.replaceState({}, "", `/join.html?code=${code}`);
+  location.reload();
+} else {
+  loadInvite();
+}
+</script>
+</body>
+</html>
