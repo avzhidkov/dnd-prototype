@@ -35,7 +35,7 @@ body { font-family: monospace; background: var(--bg); color: var(--text); min-he
 .card-meta { font-size:11px; color:var(--dim); }
 .card-last { font-size:11px; color:var(--faint); margin-top:.3rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-style:italic; }
 .card-actions { display:flex; gap:.5rem; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; }
-.empty { text-align:center; padding:4rem 2rem; font-size:12px; color:var(--faint); letter-spacing:.06em; line-height:2; }
+.empty { text-align:center; padding:2rem; font-size:12px; color:var(--faint); letter-spacing:.06em; line-height:2; }
 .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,.75); display:none; align-items:center; justify-content:center; z-index:100; }
 .modal-bg.open { display:flex; }
 .modal { background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:1.75rem; width:100%; max-width:380px; display:flex; flex-direction:column; gap:1rem; }
@@ -43,6 +43,17 @@ body { font-family: monospace; background: var(--bg); color: var(--text); min-he
 .modal-inp { width:100%; background:var(--input-bg); border:1px solid var(--input-border); border-radius:3px; padding:.5rem .75rem; color:var(--text); font-family:monospace; font-size:13px; outline:none; transition:border-color .2s; }
 .modal-inp:focus { border-color:var(--accent); }
 .modal-row { display:flex; gap:.75rem; }
+
+/* Participants */
+.box { background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:1.25rem 1.5rem; margin-bottom:1rem; }
+.box-title { font-size:10px; letter-spacing:.12em; color:var(--dim); margin-bottom:1rem; padding-bottom:.6rem; border-bottom:1px solid var(--border2); display:flex; align-items:center; justify-content:space-between; }
+.members-grid { display:flex; flex-wrap:wrap; gap:.75rem; }
+.member-card { background:var(--bg3); border:1px solid var(--border); border-radius:6px; padding:.75rem 1rem; display:flex; align-items:center; gap:.75rem; min-width:180px; }
+.member-avatar { width:32px; height:32px; border-radius:50%; background:var(--input-bg); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--faint); flex-shrink:0; }
+.member-info { flex:1; min-width:0; }
+.member-email { font-size:11px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.member-role { font-size:10px; color:var(--faint); margin-top:.15rem; }
+.member-role.dm { color:var(--accent); }
 </style>
 </head>
 <body>
@@ -59,6 +70,19 @@ body { font-family: monospace; background: var(--bg); color: var(--text); min-he
 </nav>
 
 <div class="page">
+
+  <!-- Участники -->
+  <div class="box">
+    <div class="box-title">
+      УЧАСТНИКИ
+      <span id="members-count" style="color:var(--faint);font-size:10px;"></span>
+    </div>
+    <div class="members-grid" id="members-grid">
+      <div style="font-size:11px;color:var(--faint);">Загрузка...</div>
+    </div>
+  </div>
+
+  <!-- Сессии -->
   <div class="page-header">
     <span class="page-title">СЕССИИ</span>
     <div class="header-actions">
@@ -94,6 +118,8 @@ _tb.onclick = () => {
 };
 
 const $ = id => document.getElementById(id);
+const SUPABASE_URL = "https://mbysjfsuqeqjcedgfdmb.supabase.co";
+const SUPABASE_KEY = "sb_publishable_V-Ug9nyp6XPVBIJ3tr3qww_VjwGLg6Z";
 const CAMPAIGN_ID   = localStorage.getItem("active-campaign-id");
 const CAMPAIGN_NAME = localStorage.getItem("active-campaign-name") || "Кампания";
 const TOKEN         = localStorage.getItem("sb-token");
@@ -108,6 +134,69 @@ const api = (path, opts = {}) => fetch(path, {
   headers: { "Content-Type":"application/json", "Authorization": `Bearer ${TOKEN}`, ...(opts.headers||{}) },
 }).then(r => r.json());
 
+const sbFetch = (path, opts = {}) => fetch(`${SUPABASE_URL}${path}`, {
+  ...opts,
+  headers: { "Content-Type":"application/json", "apikey":SUPABASE_KEY, "Authorization":`Bearer ${TOKEN}`, ...(opts.headers||{}) },
+}).then(r => r.json());
+
+// ── Участники ─────────────────────────────────
+const loadMembers = async () => {
+  const grid = $("members-grid");
+  try {
+    // Владелец кампании
+    const campaigns = await api("/api/campaigns");
+    const campaign = (campaigns || []).find(c => c.id === CAMPAIGN_ID);
+    const ownerId = campaign?.user_id;
+
+    // Участники через инвайты
+    const invites = await sbFetch(`/rest/v1/session_invites?select=used_by&campaign_id=eq.${CAMPAIGN_ID}&used_by=not.is.null`);
+    const memberIds = [...new Set((invites || []).map(i => i.used_by).filter(Boolean))];
+
+    // Получаем email из auth через profiles
+    const members = [];
+
+    // Владелец
+    if (ownerId) {
+      const ownerProfile = await sbFetch(`/rest/v1/profiles?select=*&id=eq.${ownerId}`);
+      const ownerAuth = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+        headers: { "apikey":SUPABASE_KEY, "Authorization":`Bearer ${TOKEN}` }
+      }).then(r => r.json());
+      members.push({ id: ownerId, email: ownerAuth.email || ownerId.slice(0,8), role: "dm" });
+    }
+
+    // Участники
+    for (const uid of memberIds) {
+      if (uid !== ownerId) {
+        members.push({ id: uid, email: uid.slice(0,8)+"...", role: "player" });
+      }
+    }
+
+    $("members-count").textContent = `(${members.length})`;
+
+    if (members.length === 0) {
+      grid.innerHTML = '<div style="font-size:11px;color:var(--faint);">Нет участников</div>';
+      return;
+    }
+
+    grid.innerHTML = "";
+    members.forEach(m => {
+      const card = document.createElement("div");
+      card.className = "member-card";
+      card.innerHTML = `
+        <div class="member-avatar">◎</div>
+        <div class="member-info">
+          <div class="member-email">${m.email}</div>
+          <div class="member-role ${m.role === "dm" ? "dm" : ""}">${m.role === "dm" ? "Мастер" : "Игрок"}</div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  } catch(e) {
+    grid.innerHTML = '<div style="font-size:11px;color:var(--faint);">Ошибка загрузки</div>';
+  }
+};
+
+// ── Сессии ────────────────────────────────────
 const loadSessions = async () => {
   const data = await api(`/api/sessions?campaign_id=${CAMPAIGN_ID}`);
   const list = $("sessions-list");
@@ -147,7 +236,7 @@ const openSession = (id, name) => {
   window.location.href = "/session.html";
 };
 const openViz = (id) => window.open(`/viz.html?session=${id}`, "_blank");
-const inviteToSession = async (sessionId, sessionName) => {
+const inviteToSession = async (sessionId) => {
   const res = await fetch("/api/invites", {
     method: "POST",
     headers: { "Content-Type":"application/json", "Authorization":`Bearer ${TOKEN}` },
@@ -183,6 +272,7 @@ $("modal-session-create").onclick = async () => {
 };
 $("new-session-name").onkeydown = e => { if (e.key === "Enter") $("modal-session-create").click(); };
 
+loadMembers();
 loadSessions();
 </script>
 </body>
