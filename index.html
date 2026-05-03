@@ -18,16 +18,12 @@ body { font-family: monospace; background: var(--bg); color: var(--text); min-he
 .btn.danger:hover { background:var(--red2); }
 .theme-toggle { background:none; border:1px solid var(--border); border-radius:3px; padding:.3rem .6rem; cursor:pointer; font-size:13px; color:var(--dim); transition:all .2s; }
 .theme-toggle:hover { border-color:var(--accent); color:var(--accent); }
-
-/* Auth */
 .auth-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80vh; gap:1.5rem; }
 .auth-logo { font-size:32px; letter-spacing:.2em; color:var(--accent); margin-bottom:.5rem; }
 .auth-tagline { font-size:11px; color:var(--faint); letter-spacing:.1em; }
 .auth-box { background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:2rem; width:100%; max-width:340px; }
 .auth-btn { width:100%; font-family:monospace; font-size:12px; letter-spacing:.06em; padding:.75rem; border:1px solid rgba(74,175,114,.5); background:transparent; color:var(--accent); cursor:pointer; border-radius:3px; transition:all .2s; display:flex; align-items:center; justify-content:center; gap:.5rem; }
 .auth-btn:hover { background:var(--accent2); }
-
-/* Home screen */
 .home { padding:2.5rem 1.5rem; max-width:860px; margin:0 auto; }
 .home-greeting { font-size:11px; color:var(--faint); letter-spacing:.1em; margin-bottom:2rem; }
 .sections-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:2rem; }
@@ -35,19 +31,14 @@ body { font-family: monospace; background: var(--bg); color: var(--text); min-he
 .section-card { background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:1.75rem; cursor:pointer; transition:all .25s; display:flex; flex-direction:column; gap:.75rem; position:relative; overflow:hidden; }
 .section-card:hover { border-color:var(--accent); transform:translateY(-1px); }
 .section-card.disabled { opacity:.4; cursor:default; pointer-events:none; }
-.section-card.disabled:hover { transform:none; border-color:var(--border); }
 .section-icon { font-size:24px; }
 .section-title { font-size:14px; letter-spacing:.08em; color:var(--text); }
 .section-desc { font-size:11px; color:var(--faint); line-height:1.6; }
-.section-badge { position:absolute; top:.75rem; right:.75rem; font-size:9px; letter-spacing:.08em; padding:.2rem .5rem; border-radius:2px; border:1px solid; }
-.section-badge.soon { color:var(--faint); border-color:var(--border); }
-.section-badge.new { color:var(--accent); border-color:rgba(74,175,114,.4); }
-
-/* Campaigns list (inside Parties section) */
+.section-badge { position:absolute; top:.75rem; right:.75rem; font-size:9px; letter-spacing:.08em; padding:.2rem .5rem; border-radius:2px; border:1px solid; color:var(--faint); border-color:var(--border); }
 .section-page { display:none; padding:2rem 1.5rem; max-width:700px; margin:0 auto; }
 .section-page.active { display:block; }
 .section-header { display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem; }
-.back-btn { font-family:monospace; font-size:10px; color:var(--dim); background:none; border:1px solid var(--border); border-radius:3px; padding:.3rem .7rem; cursor:pointer; transition:all .2s; text-decoration:none; }
+.back-btn { font-family:monospace; font-size:10px; color:var(--dim); background:none; border:1px solid var(--border); border-radius:3px; padding:.3rem .7rem; cursor:pointer; transition:all .2s; }
 .back-btn:hover { color:var(--text); border-color:var(--accent); }
 .section-header-title { font-size:11px; letter-spacing:.15em; color:var(--dim); flex:1; }
 .list { display:flex; flex-direction:column; gap:.6rem; }
@@ -58,7 +49,7 @@ body { font-family: monospace; background: var(--bg); color: var(--text); min-he
 .card-meta { font-size:11px; color:var(--dim); }
 .card-desc { font-size:11px; color:var(--faint); margin-top:.2rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .card-actions { display:flex; gap:.5rem; flex-shrink:0; }
-.empty { text-align:center; padding:4rem 2rem; font-size:12px; color:var(--faint); letter-spacing:.06em; line-height:2; }
+.empty { text-align:center; padding:3rem 2rem; font-size:12px; color:var(--faint); letter-spacing:.06em; line-height:2; }
 .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,.75); display:none; align-items:center; justify-content:center; z-index:100; }
 .modal-bg.open { display:flex; }
 .modal { background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:1.75rem; width:100%; max-width:400px; display:flex; flex-direction:column; gap:1rem; }
@@ -66,6 +57,17 @@ body { font-family: monospace; background: var(--bg); color: var(--text); min-he
 .modal-inp { width:100%; background:var(--input-bg); border:1px solid var(--input-border); border-radius:3px; padding:.5rem .75rem; color:var(--text); font-family:monospace; font-size:13px; outline:none; transition:border-color .2s; }
 .modal-inp:focus { border-color:var(--accent); }
 .modal-row { display:flex; gap:.75rem; }
+
+/* Profile */
+.profile-box { background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:1.5rem; margin-bottom:1rem; }
+.profile-box-title { font-size:10px; letter-spacing:.1em; color:var(--dim); margin-bottom:1rem; padding-bottom:.6rem; border-bottom:1px solid var(--border2); }
+.char-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:.75rem; }
+.char-card { background:var(--bg3); border:1px solid var(--border); border-radius:6px; padding:.85rem; display:flex; flex-direction:column; align-items:center; gap:.5rem; text-align:center; }
+.char-avatar { width:48px; height:48px; border-radius:50%; border:1px solid var(--border); object-fit:cover; }
+.char-avatar-placeholder { width:48px; height:48px; border-radius:50%; border:1px dashed var(--border); background:var(--input-bg); display:flex; align-items:center; justify-content:center; font-size:18px; color:var(--faint); }
+.char-name { font-size:12px; color:var(--text); }
+.char-race { font-size:10px; color:var(--faint); }
+.char-campaign { font-size:10px; color:var(--dim); margin-top:.2rem; }
 </style>
 </head>
 <body>
@@ -79,7 +81,6 @@ body { font-family: monospace; background: var(--bg); color: var(--text); min-he
   </div>
 </nav>
 
-<!-- Auth -->
 <div class="auth-wrap" id="auth-wrap" style="display:none;">
   <div style="text-align:center;">
     <div class="auth-logo">✦</div>
@@ -93,7 +94,6 @@ body { font-family: monospace; background: var(--bg); color: var(--text); min-he
   </div>
 </div>
 
-<!-- Home -->
 <div class="home" id="home-page" style="display:none;">
   <div class="home-greeting" id="home-greeting"></div>
   <div class="sections-grid">
@@ -103,7 +103,7 @@ body { font-family: monospace; background: var(--bg); color: var(--text); min-he
       <div class="section-desc">Групповые кампании, D&D сессии, живой нарратив с визуализацией</div>
     </div>
     <div class="section-card disabled">
-      <div class="section-badge soon">СКОРО</div>
+      <div class="section-badge">СКОРО</div>
       <div class="section-icon">✦</div>
       <div class="section-title">ОДИНОЧНАЯ ИГРА</div>
       <div class="section-desc">Интерактивные истории с ИИ-нарратором, визуал и голос</div>
@@ -111,10 +111,10 @@ body { font-family: monospace; background: var(--bg); color: var(--text); min-he
     <div class="section-card" onclick="showSection('profile')">
       <div class="section-icon">◎</div>
       <div class="section-title">ПРОФИЛЬ</div>
-      <div class="section-desc">Настройки аккаунта, персонажи, статистика сессий</div>
+      <div class="section-desc">Персонажи, активные кампании, настройки аккаунта</div>
     </div>
     <div class="section-card disabled">
-      <div class="section-badge soon">СКОРО</div>
+      <div class="section-badge">СКОРО</div>
       <div class="section-icon">◈</div>
       <div class="section-title">МАГАЗИН</div>
       <div class="section-desc">Сценарии и нарративы от авторов сообщества</div>
@@ -122,7 +122,7 @@ body { font-family: monospace; background: var(--bg); color: var(--text); min-he
   </div>
 </div>
 
-<!-- Parties section -->
+<!-- Parties -->
 <div class="section-page" id="section-parties">
   <div class="section-header">
     <button class="back-btn" onclick="showHome()">← Главная</button>
@@ -134,19 +134,35 @@ body { font-family: monospace; background: var(--bg); color: var(--text); min-he
   </div>
 </div>
 
-<!-- Profile section -->
+<!-- Profile -->
 <div class="section-page" id="section-profile">
   <div class="section-header">
     <button class="back-btn" onclick="showHome()">← Главная</button>
     <span class="section-header-title">ПРОФИЛЬ</span>
   </div>
-  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:1.5rem;margin-bottom:1rem;">
-    <div style="font-size:10px;letter-spacing:.1em;color:var(--dim);margin-bottom:1rem;padding-bottom:.6rem;border-bottom:1px solid var(--border2);">АККАУНТ</div>
+
+  <div class="profile-box">
+    <div class="profile-box-title">АККАУНТ</div>
     <div style="font-size:13px;color:var(--text);margin-bottom:.5rem;" id="profile-email"></div>
     <div style="font-size:11px;color:var(--faint);" id="profile-since"></div>
   </div>
-  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:1.5rem;">
-    <div style="font-size:10px;letter-spacing:.1em;color:var(--dim);margin-bottom:1rem;padding-bottom:.6rem;border-bottom:1px solid var(--border2);">ДЕЙСТВИЯ</div>
+
+  <div class="profile-box">
+    <div class="profile-box-title">МОИ ПЕРСОНАЖИ <span id="chars-count" style="color:var(--faint);"></span></div>
+    <div class="char-grid" id="chars-grid">
+      <div class="empty" style="padding:1.5rem;grid-column:1/-1;">Загрузка...</div>
+    </div>
+  </div>
+
+  <div class="profile-box">
+    <div class="profile-box-title">АКТИВНЫЕ КАМПАНИИ <span id="campaigns-count" style="color:var(--faint);"></span></div>
+    <div class="list" id="profile-campaigns-list">
+      <div class="empty" style="padding:1.5rem;">Загрузка...</div>
+    </div>
+  </div>
+
+  <div class="profile-box">
+    <div class="profile-box-title">ДЕЙСТВИЯ</div>
     <button class="btn danger" id="profile-logout" style="font-size:11px;padding:.45rem 1rem;">Выйти из аккаунта</button>
   </div>
 </div>
@@ -228,21 +244,19 @@ const showSection = (name) => {
   document.querySelectorAll(".section-page").forEach(p => p.classList.remove("active"));
   $(`section-${name}`).classList.add("active");
   if (name === "parties") loadCampaigns();
+  if (name === "profile") loadProfile();
 };
 
 $("auth-btn").onclick = () => {
   window.location.href = `${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(window.location.origin + "/")}`;
 };
-
 const logout = () => {
   ["sb-token","active-campaign-id","active-campaign-name","active-session-id","active-session-name"].forEach(k=>localStorage.removeItem(k));
-  token = null; currentUser = null;
-  showAuth();
+  token = null; currentUser = null; showAuth();
 };
 $("btn-logout").onclick = logout;
 $("profile-logout").onclick = logout;
 
-// ── OAuth callback ────────────────────────────
 const hash = new URLSearchParams(window.location.hash.replace("#",""));
 const accessToken = hash.get("access_token");
 if (accessToken) {
@@ -250,9 +264,7 @@ if (accessToken) {
   localStorage.setItem("sb-token", token);
   window.history.replaceState({}, "", "/");
   sbFetch("/auth/v1/user").then(r => r.json()).then(showHome);
-} else {
-  checkSession();
-}
+} else { checkSession(); }
 
 // ── Campaigns ─────────────────────────────────
 const loadCampaigns = async () => {
@@ -267,19 +279,89 @@ const loadCampaigns = async () => {
     const card = document.createElement("div");
     card.className = "card";
     const d = new Date(c.created_at);
+    const isOwner = c.user_id === currentUser?.id;
     card.innerHTML = `
       <div class="card-info" onclick="openCampaign('${c.id}','${c.name.replace(/'/g,"\\'")}')">
         <div class="card-name">${c.name}</div>
         ${c.description ? `<div class="card-desc">${c.description}</div>` : ""}
-        <div class="card-meta">${d.toLocaleDateString("ru")}</div>
+        <div class="card-meta">${d.toLocaleDateString("ru")} ${isOwner ? "· ДМ" : "· Участник"}</div>
       </div>
       <div class="card-actions">
         <button class="btn primary" onclick="openCampaign('${c.id}','${c.name.replace(/'/g,"\\'")}')">Открыть</button>
-        <button class="btn" onclick="openCampaignSettings(event,'${c.id}','${c.name.replace(/'/g,"\\'")}')">⚙</button>
-        <button class="btn danger" onclick="deleteCampaign(event,'${c.id}')">×</button>
+        ${isOwner ? `<button class="btn" onclick="openCampaignSettings(event,'${c.id}','${c.name.replace(/'/g,"\\'")}')">⚙</button>` : ""}
+        ${isOwner ? `<button class="btn danger" onclick="deleteCampaign(event,'${c.id}')">×</button>` : ""}
       </div>`;
     list.appendChild(card);
   });
+};
+
+// ── Profile ───────────────────────────────────
+const loadProfile = async () => {
+  // Персонажи
+  const charsGrid = $("chars-grid");
+  charsGrid.innerHTML = '<div class="empty" style="padding:1.5rem;grid-column:1/-1;">Загрузка...</div>';
+
+  try {
+    const campaigns = await api("/api/campaigns");
+    const campaignMap = {};
+    (campaigns || []).forEach(c => { campaignMap[c.id] = c.name; });
+
+    // Загружаем персонажей из всех кампаний
+    const allChars = [];
+    for (const c of (campaigns || [])) {
+      const chars = await api(`/api/characters?campaign_id=${c.id}`);
+      if (Array.isArray(chars)) {
+        chars.filter(ch => ch.user_id === currentUser?.id || !ch.user_id).forEach(ch => {
+          allChars.push({ ...ch, campaignName: c.name });
+        });
+      }
+    }
+
+    $("chars-count").textContent = allChars.length ? `(${allChars.length})` : "";
+
+    if (allChars.length === 0) {
+      charsGrid.innerHTML = '<div class="empty" style="padding:1.5rem;grid-column:1/-1;">Нет персонажей</div>';
+    } else {
+      charsGrid.innerHTML = "";
+      allChars.forEach(ch => {
+        const card = document.createElement("div");
+        card.className = "char-card";
+        card.innerHTML = `
+          ${ch.avatar_url
+            ? `<img class="char-avatar" src="${ch.avatar_url}" />`
+            : `<div class="char-avatar-placeholder">✦</div>`}
+          <div class="char-name">${ch.name}</div>
+          ${ch.race ? `<div class="char-race">${ch.race}</div>` : ""}
+          <div class="char-campaign">${ch.campaignName}</div>
+        `;
+        charsGrid.appendChild(card);
+      });
+    }
+
+    // Активные кампании
+    const campList = $("profile-campaigns-list");
+    $("campaigns-count").textContent = campaigns?.length ? `(${campaigns.length})` : "";
+    if (!campaigns?.length) {
+      campList.innerHTML = '<div class="empty" style="padding:1.5rem;">Нет кампаний</div>';
+    } else {
+      campList.innerHTML = "";
+      campaigns.forEach(c => {
+        const card = document.createElement("div");
+        card.className = "card";
+        const isOwner = c.user_id === currentUser?.id;
+        card.innerHTML = `
+          <div class="card-info" onclick="openCampaign('${c.id}','${c.name.replace(/'/g,"\\'")}')">
+            <div class="card-name">${c.name}</div>
+            <div class="card-meta">${isOwner ? "ДМ" : "Участник"}</div>
+          </div>
+          <button class="btn primary" onclick="openCampaign('${c.id}','${c.name.replace(/'/g,"\\'")}')">Открыть</button>
+        `;
+        campList.appendChild(card);
+      });
+    }
+  } catch(e) {
+    charsGrid.innerHTML = '<div class="empty" style="grid-column:1/-1;">Ошибка загрузки</div>';
+  }
 };
 
 const openCampaignSettings = (e, id, name) => {
