@@ -10,13 +10,13 @@ export default async function handler(req, res) {
 
   const { room, characterName, userId } = req.body;
 
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
     return res.status(500).json({ error: 'Missing env vars' });
   }
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
+    process.env.SUPABASE_SERVICE_KEY
   );
 
   const authHeader = req.headers.authorization;
