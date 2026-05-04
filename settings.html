@@ -36,8 +36,6 @@ button.danger { border-color:rgba(192,80,64,.4); color:var(--red); font-size:10p
 button.danger:hover { background:var(--red2); }
 .save-bar { display:flex; align-items:center; gap:1rem; }
 .save-status { font-size:11px; color:var(--accent); opacity:0; transition:opacity .3s; }
-
-/* Characters */
 .chars-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:.75rem; }
 .char-list { display:flex; flex-direction:column; gap:.75rem; }
 .char-card { background:var(--bg3); border:1px solid var(--border); border-radius:6px; padding:1rem 1.1rem; }
@@ -75,7 +73,6 @@ button.danger:hover { background:var(--red2); }
 
 <div class="page">
 
-  <!-- Мир -->
   <div class="box">
     <div class="box-title">МИР И СЕТТИНГ</div>
     <p class="hint">Попадают в каждую сессию автоматически — в промпты нарратива и image gen.</p>
@@ -87,7 +84,6 @@ button.danger:hover { background:var(--red2); }
     <input type="text" id="s-art-style" placeholder="dark fantasy illustration, detailed, dramatic lighting" />
   </div>
 
-  <!-- Параметры записи -->
   <div class="box">
     <div class="box-title">ПАРАМЕТРЫ ЗАПИСИ ПО УМОЛЧАНИЮ</div>
     <div class="row"><label>Язык Whisper</label><input type="text" id="s-lang" value="ru" style="max-width:80px;" /></div>
@@ -95,7 +91,6 @@ button.danger:hover { background:var(--red2); }
     <div class="row"><label>VAD порог</label><input type="text" id="s-vad" value="10" style="max-width:80px;" /></div>
   </div>
 
-  <!-- Персонажи -->
   <div class="box">
     <div class="box-title">
       ПЕРСОНАЖИ ПАРТИИ
@@ -107,7 +102,6 @@ button.danger:hover { background:var(--red2); }
     </div>
   </div>
 
-  <!-- Сохранить -->
   <div class="box" style="background:transparent;border-color:var(--border2);">
     <div class="save-bar">
       <button class="primary" id="btn-save" style="padding:.55rem 1.25rem;font-size:11px;letter-spacing:.1em;">СОХРАНИТЬ</button>
@@ -120,7 +114,7 @@ button.danger:hover { background:var(--red2); }
 <script>
 const $ = id => document.getElementById(id);
 const SUPABASE_URL = "https://mbysjfsuqeqjcedgfdmb.supabase.co";
-const SUPABASE_KEY = "sb_publishable_V-Ug9nyp6XPVBIJ3tr3qww_VjwGLg6Z";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ieXNqZnN1cWVxamNlZGdmZG1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3ODE4NDYsImV4cCI6MjA5MjM1Nzg0Nn0.iAX_wA1YvvwPZpNQz5iVchpbUrw9RQ2i592ePEdc9o8";
 const CAMPAIGN_ID  = localStorage.getItem("active-campaign-id");
 const CAMPAIGN_NAME= localStorage.getItem("active-campaign-name") || "Кампания";
 const TOKEN        = localStorage.getItem("sb-token");
@@ -133,7 +127,6 @@ $("nav-campaign-name").textContent = CAMPAIGN_NAME;
 const savedTheme = localStorage.getItem("theme") || "dark";
 document.documentElement.setAttribute("data-theme", savedTheme);
 $("theme-toggle").textContent = savedTheme === "dark" ? "☀" : "☾";
-
 $("theme-toggle").onclick = () => {
   const cur = document.documentElement.getAttribute("data-theme");
   const next = cur === "dark" ? "light" : "dark";
@@ -142,14 +135,19 @@ $("theme-toggle").onclick = () => {
   $("theme-toggle").textContent = next === "dark" ? "☀" : "☾";
 };
 
-// ── API ───────────────────────────────────────
+// ── Прямой запрос к Supabase (GET) ───────────
+const sb = (path) => fetch(`${SUPABASE_URL}${path}`, {
+  headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${TOKEN}` }
+}).then(r => r.json());
+
+// Через Vercel (POST/PATCH/DELETE) ─────────────
 const api = (path, opts = {}) => fetch(path, {
   ...opts,
   headers: { "Content-Type":"application/json", "Authorization":`Bearer ${TOKEN}`, ...(opts.headers||{}) },
 }).then(r => r.json());
 
 // ── Characters state ──────────────────────────
-let characters = []; // {id, name, race, appearance, avatar_url, _dirty, _new, _deleted}
+let characters = [];
 
 const renderChars = () => {
   const list = $("char-list");
@@ -167,10 +165,7 @@ const renderChars = () => {
     card.innerHTML = `
       <div class="char-card-top">
         <span class="char-label">ПЕРСОНАЖ ${idx + 1}</span>
-        <div style="display:flex;gap:.5rem;align-items:center;">
-
-          <button class="danger btn-del-char">× Удалить</button>
-        </div>
+        <button class="danger btn-del-char">× Удалить</button>
       </div>
       <div class="char-body">
         <div class="char-field">
@@ -202,7 +197,6 @@ const renderChars = () => {
       </div>
     `;
 
-    // Events
     const cid = ch.id || ch._tempId;
 
     card.querySelectorAll("[data-field]").forEach(el => {
@@ -271,8 +265,7 @@ const renderChars = () => {
 $("btn-add-char").onclick = () => {
   characters.push({
     _tempId: `temp-${Date.now()}`,
-    _new: true,
-    _dirty: true,
+    _new: true, _dirty: true,
     name: "", type: "pc", race: "", appearance: "", avatar_url: "",
     reference_art_urls: [], narrative: {},
   });
@@ -282,9 +275,9 @@ $("btn-add-char").onclick = () => {
 
 // ── Load ──────────────────────────────────────
 const loadSettings = async () => {
-  // Campaign settings
-  const campaigns = await api("/api/campaigns");
-  const campaign = Array.isArray(campaigns) ? campaigns.find(c => c.id === CAMPAIGN_ID) : null;
+  // Прямо к Supabase
+  const campaigns = await sb(`/rest/v1/campaigns?id=eq.${CAMPAIGN_ID}&select=*`);
+  const campaign = Array.isArray(campaigns) ? campaigns[0] : null;
   const s = campaign?.settings || {};
   $("s-world-name").value = s.worldName || "";
   $("s-world-desc").value = s.worldDesc || "";
@@ -293,15 +286,14 @@ const loadSettings = async () => {
   $("s-chunk").value      = s.chunk     || "30";
   $("s-vad").value        = s.vad       || "10";
 
-  // Characters from DB
-  const chars = await api(`/api/characters?campaign_id=${CAMPAIGN_ID}`);
+  // Персонажи прямо к Supabase
+  const chars = await sb(`/rest/v1/characters?campaign_id=eq.${CAMPAIGN_ID}&order=created_at.asc`);
   characters = Array.isArray(chars) ? chars : [];
   renderChars();
 };
 
 // ── Save ──────────────────────────────────────
 $("btn-save").onclick = async () => {
-  // Save campaign settings
   const settings = {
     worldName: $("s-world-name").value,
     worldDesc: $("s-world-desc").value,
@@ -316,7 +308,6 @@ $("btn-save").onclick = async () => {
     body: JSON.stringify({ settings }),
   });
 
-  // Save characters
   const promises = characters.map(async ch => {
     if (ch._deleted && ch.id) {
       return api(`/api/characters?id=${ch.id}`, { method:"DELETE" });
@@ -326,7 +317,7 @@ $("btn-save").onclick = async () => {
         method: "POST",
         body: JSON.stringify({
           campaign_id: CAMPAIGN_ID,
-          name: ch.name, type: 'pc', race: ch.race,
+          name: ch.name, type: "pc", race: ch.race,
           appearance: ch.appearance, avatar_url: ch.avatar_url,
           reference_art_urls: ch.reference_art_urls || [],
           narrative: ch.narrative || {},
@@ -337,7 +328,7 @@ $("btn-save").onclick = async () => {
       return api(`/api/characters?id=${ch.id}`, {
         method: "PATCH",
         body: JSON.stringify({
-          name: ch.name, type: 'pc', race: ch.race,
+          name: ch.name, type: "pc", race: ch.race,
           appearance: ch.appearance, avatar_url: ch.avatar_url,
           reference_art_urls: ch.reference_art_urls || [],
           narrative: ch.narrative || {},
@@ -348,8 +339,8 @@ $("btn-save").onclick = async () => {
 
   await Promise.all(promises);
 
-  // Reload to get fresh IDs
-  const fresh = await api(`/api/characters?campaign_id=${CAMPAIGN_ID}`);
+  // Перезагружаем чтобы получить свежие ID
+  const fresh = await sb(`/rest/v1/characters?campaign_id=eq.${CAMPAIGN_ID}&order=created_at.asc`);
   characters = Array.isArray(fresh) ? fresh : [];
   renderChars();
 
