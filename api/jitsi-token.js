@@ -1,41 +1,19 @@
-import jwt from 'jsonwebtoken';
 import { createClient } from '@supabase/supabase-js';
 
-const APP_ID = 'dreamstory';
-const APP_SECRET = 'ds_jwt_secret_2026_xK9mP3';
-const JITSI_HOST = 'room.dream-story.ru';
-
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).end();
-
-  const { room, characterName, userId } = req.body;
-
   const supabase = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_KEY
   );
 
   const authHeader = req.headers.authorization;
-  const { data: { user }, error } = await supabase.auth.getUser(
-    authHeader?.replace('Bearer ', '')
-  );
-
-  if (error || !user) return res.status(401).json({ error: 'Unauthorized' });
-
-  const token = jwt.sign({
-    aud: APP_ID,
-    iss: APP_ID,
-    sub: JITSI_HOST,
-    room: room,
-    exp: Math.floor(Date.now() / 1000) + 60 * 60 * 8,
-    context: {
-      user: {
-        id: userId || user.id,
-        name: characterName || user.email,
-        email: user.email,
-      }
-    }
-  }, APP_SECRET);
-
-  res.json({ token });
+  const token = authHeader?.replace('Bearer ', '');
+  
+  const { data, error } = await supabase.auth.getUser(token);
+  
+  res.json({ 
+    user: data?.user?.email || null,
+    error: error?.message || null,
+    tokenStart: token?.substring(0, 20)
+  });
 }
