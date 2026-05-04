@@ -122,6 +122,9 @@ _tb.onclick = () => {
 
 const $ = id => document.getElementById(id);
 
+const SUPABASE_URL = "https://mbysjfsuqeqjcedgfdmb.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ieXNqZnN1cWVxamNlZGdmZG1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3ODE4NDYsImV4cCI6MjA5MjM1Nzg0Nn0.iAX_wA1YvvwPZpNQz5iVchpbUrw9RQ2i592ePEdc9o8";
+
 const urlParams = new URLSearchParams(window.location.search);
 const SESSION_ID    = urlParams.get("session") || localStorage.getItem("active-session-id");
 const SESSION_TOKEN = localStorage.getItem("sb-token");
@@ -292,12 +295,15 @@ const loadServerGallery = async () => {
     }));
     return;
   }
+
   setStatus("Загружаю историю сессии...", "busy");
   try {
-    const res = await fetch(`/api/events?session_id=${SESSION_ID}`, {
-      headers: { "Authorization": `Bearer ${SESSION_TOKEN}` }
-    });
-    const events = await res.json();
+    // Прямой запрос к Supabase
+    const events = await fetch(
+      `${SUPABASE_URL}/rest/v1/events?session_id=eq.${SESSION_ID}&order=created_at.asc`,
+      { headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SESSION_TOKEN}` } }
+    ).then(r => r.json());
+
     if (Array.isArray(events) && events.length > 0) {
       events.filter(ev => ev.image_url).forEach(ev => {
         const item = {
@@ -318,6 +324,7 @@ const loadServerGallery = async () => {
       }
     }
   } catch(e) { console.error("Load error:", e); }
+
   setStatus("Слушаю основную вкладку...", "");
 };
 

@@ -109,10 +109,8 @@ button.primary:hover:not(:disabled) { background:var(--accent2); }
 
 <div class="page">
 
-  <!-- API ключи -->
   <div class="box">
     <div class="box-title">ПАРАМЕТРЫ</div>
-
     <div class="row">
       <label>OpenAI</label>
       <input type="password" id="openai-key" placeholder="sk-... (Whisper + image gen)" />
@@ -121,7 +119,6 @@ button.primary:hover:not(:disabled) { background:var(--accent2); }
       <label>Groq</label>
       <input type="password" id="groq-key" placeholder="gsk_... (транскрипция, бесплатно)" />
     </div>
-
     <div class="row">
       <label>Нарратив</label>
       <div class="radio-group">
@@ -130,12 +127,10 @@ button.primary:hover:not(:disabled) { background:var(--accent2); }
       </div>
       <span class="keys-saved" id="keys-saved">Сохранено ✓</span>
     </div>
-
     <div class="row" id="gemini-row" style="display:none;">
       <label>Gemini</label>
       <input type="password" id="gemini-key" placeholder="AIza... (нарратив)" />
     </div>
-
     <div class="row">
       <label>Язык</label>
       <input type="text" id="lang" value="ru" style="max-width:60px;" />
@@ -146,19 +141,18 @@ button.primary:hover:not(:disabled) { background:var(--accent2); }
     </div>
     <div class="row"><span class="settings-hint" id="settings-hint">Загружаю настройки...</span></div>
   </div>
-    <!-- Jitsi звонок -->
-    <div class="box" id="jitsi-box">
-        <div class="box-title" style="display:flex;align-items:center;justify-content:space-between;">
-        <span>ЗВОНОК</span>
-        <button id="jitsi-toggle" onclick="toggleJitsi()" style="font-size:10px;padding:.2rem .6rem;">Подключиться</button>
-        </div>
-        <div id="jitsi-container" style="display:none;width:100%;height:400px;border-radius:4px;overflow:hidden;"></div>
-        <div id="jitsi-status" style="font-size:11px;color:var(--dim);margin-top:.5rem;display:none;"></div>
+
+  <div class="box" id="jitsi-box">
+    <div class="box-title" style="display:flex;align-items:center;justify-content:space-between;">
+      <span>ЗВОНОК</span>
+      <button id="jitsi-toggle" onclick="toggleJitsi()" style="font-size:10px;padding:.2rem .6rem;">Подключиться</button>
     </div>
-  <!-- World State + Pre-session briefing -->
+    <div id="jitsi-container" style="display:none;width:100%;height:400px;border-radius:4px;overflow:hidden;"></div>
+    <div id="jitsi-status" style="font-size:11px;color:var(--dim);margin-top:.5rem;display:none;"></div>
+  </div>
+
   <div class="box">
     <div class="box-title">СОСТОЯНИЕ МИРА ПЕРЕД СЕССИЕЙ</div>
-
     <div class="ws-grid" style="margin-bottom:.85rem;">
       <div class="ws-field">
         <label>ТЕКУЩАЯ ЛОКАЦИЯ</label>
@@ -170,29 +164,24 @@ button.primary:hover:not(:disabled) { background:var(--accent2); }
         <input type="text" id="ws-threat" placeholder="Некромант где-то в подвале..." />
       </div>
     </div>
-
     <div style="margin-bottom:.85rem;">
       <label class="field-label">ЧТО ПРОИЗОШЛО В ПРОШЛОЙ СЕССИИ (кратко)</label>
       <textarea id="ws-prev-summary" rows="2" placeholder="Партия нашла дневник графа. Сигурд ранен зомби..."></textarea>
     </div>
-
     <div style="margin-bottom:.85rem;">
       <label class="field-label">АКТИВНЫЕ NPC РЯДОМ С ПАРТИЕЙ</label>
       <input type="text" id="ws-npcs" placeholder="Граф Алекс (пленник), Слуга Борис (мёртв)..." />
     </div>
-
     <div>
       <label class="field-label">ЗАМЕТКИ ДМ / ОСОБЫЕ УСЛОВИЯ ЭТОЙ СЕССИИ</label>
       <textarea id="ws-dm-notes" rows="2" placeholder="Сегодня финальная битва. Партия истощена..."></textarea>
     </div>
-
     <div class="briefing-actions">
       <button class="primary" id="btn-save-briefing">Сохранить контекст</button>
       <span style="font-size:11px;color:#333;font-style:italic;" id="briefing-saved"></span>
     </div>
   </div>
 
-  <!-- Статус -->
   <div class="box">
     <div class="box-title">СТАТУС</div>
     <div class="row"><span style="font-size:12px;color:#555;">Вкладка</span><div class="dot" id="dot-tab"></div></div>
@@ -209,7 +198,6 @@ button.primary:hover:not(:disabled) { background:var(--accent2); }
     </div>
   </div>
 
-  <!-- Статистика -->
   <div class="box">
     <div class="box-title">СТАТИСТИКА</div>
     <div class="stat-row"><span>Чанков / событий</span><span class="stat-val"><span id="s-chunks">0</span> / <span id="s-events">0</span></span></div>
@@ -218,19 +206,16 @@ button.primary:hover:not(:disabled) { background:var(--accent2); }
     <div class="stat-row"><span>Стоимость нарратива (est.)</span><span class="stat-val" id="s-cost-c">$0.000</span></div>
   </div>
 
-  <!-- Транскрипт -->
   <div class="box">
     <div class="box-title">ТРАНСКРИПТ</div>
     <div class="transcript" id="transcript"><span class="empty">Здесь появится текст...</span></div>
   </div>
 
-  <!-- События -->
   <div class="box">
     <div class="box-title">СОБЫТИЯ <span id="events-count" style="color:#333;font-size:10px;"></span></div>
     <div class="events-list" id="events-list"><div class="no-events">Событий пока нет...</div></div>
   </div>
 
-  <!-- Лог -->
   <div class="box">
     <div class="box-title">ЛОГ</div>
     <div class="log-box" id="log"></div>
@@ -264,6 +249,20 @@ $("session-name").textContent = SESSION_NAME;
 const vizLink = $("nav-viz");
 if (vizLink && SESSION_ID) vizLink.href = `/viz.html?session=${SESSION_ID}`;
 
+// ── Supabase прямой доступ (GET) ──────────────
+const SUPABASE_URL = "https://mbysjfsuqeqjcedgfdmb.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ieXNqZnN1cWVxamNlZGdmZG1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3ODE4NDYsImV4cCI6MjA5MjM1Nzg0Nn0.iAX_wA1YvvwPZpNQz5iVchpbUrw9RQ2i592ePEdc9o8";
+
+const sb = (path) => fetch(`${SUPABASE_URL}${path}`, {
+  headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SESSION_TOKEN}` }
+}).then(r => r.json());
+
+// Через Vercel (POST с секретными ключами)
+const sbPost = (path, opts = {}) => fetch(path, {
+  ...opts,
+  headers: { "Content-Type":"application/json", "Authorization":`Bearer ${SESSION_TOKEN}`, ...(opts.headers||{}) },
+});
+
 // ── API keys — автосохранение ─────────────────
 const showKeysSaved = () => {
   const el = $("keys-saved");
@@ -296,20 +295,14 @@ document.querySelectorAll('input[name="narrative-engine"]').forEach(radio => {
 
 const getEngine = () => document.querySelector('input[name="narrative-engine"]:checked')?.value || "gpt";
 
-// ── Supabase helpers ──────────────────────────
-const sbFetch = (path, opts = {}) => fetch(path, {
-  ...opts,
-  headers: { "Content-Type":"application/json", "Authorization":`Bearer ${SESSION_TOKEN}`, ...(opts.headers||{}) },
-});
-
 // ── Campaign settings ─────────────────────────
 let sessionSettings = {};
 
 const loadSessionSettings = async () => {
   try {
-    const res = await sbFetch("/api/campaigns");
-    const campaigns = await res.json();
-    const campaign = Array.isArray(campaigns) ? campaigns.find(c => c.id === CAMPAIGN_ID) : null;
+    // Прямой запрос к Supabase
+    const campaigns = await sb(`/rest/v1/campaigns?id=eq.${CAMPAIGN_ID}&select=*`);
+    const campaign = Array.isArray(campaigns) ? campaigns[0] : null;
     if (campaign?.settings) {
       sessionSettings = campaign.settings;
       if (sessionSettings.lang)  $("lang").value          = sessionSettings.lang;
@@ -319,23 +312,21 @@ const loadSessionSettings = async () => {
       $("settings-hint").textContent = charCount > 0
         ? `✦ ${sessionSettings.worldName || "мир"} · ${charCount} персонажей`
         : "Настройки кампании не заполнены — перейди в Настройки";
-        // Загружаем персонажей из таблицы characters
-      try {
-        const charsRes = await sbFetch(`/api/characters?campaign_id=${CAMPAIGN_ID}`);
-        const chars = await charsRes.json();
-        if (Array.isArray(chars) && chars.length > 0) {
-          sessionSettings.characters = chars.map(c => ({
-            name: c.name,
-            race: c.race,
-            appearance: c.appearance,
-            art: c.avatar_url,
-          }));
-          $("settings-hint").textContent = `✦ ${sessionSettings.worldName || "мир"} · ${chars.length} персонажей`;
-        }
-      } catch(e) { console.error("Characters load error:", e); }
     } else {
       $("settings-hint").textContent = "Настройки кампании не заполнены — перейди в Настройки";
     }
+
+    // Персонажи
+    try {
+      const chars = await sb(`/rest/v1/characters?campaign_id=eq.${CAMPAIGN_ID}`);
+      if (Array.isArray(chars) && chars.length > 0) {
+        sessionSettings.characters = chars.map(c => ({
+          name: c.name, race: c.race, appearance: c.appearance, art: c.avatar_url,
+        }));
+        $("settings-hint").textContent = `✦ ${sessionSettings.worldName || "мир"} · ${chars.length} персонажей`;
+      }
+    } catch(e) { console.error("Characters load error:", e); }
+
   } catch(e) {
     $("settings-hint").textContent = "Не удалось загрузить настройки";
   }
@@ -343,26 +334,22 @@ const loadSessionSettings = async () => {
 
 // ── World State ───────────────────────────────
 const worldState = {
-  currentLocation: "",
-  currentThreat: "",
-  activeNPCs: "",
-  prevSummary: "",
-  dmNotes: "",
-  recentEvents: [],
+  currentLocation: "", currentThreat: "", activeNPCs: "",
+  prevSummary: "", dmNotes: "", recentEvents: [],
 };
 
 const loadWorldState = async () => {
   try {
-    const res = await sbFetch(`/api/world-state?session_id=${SESSION_ID}`);
-    const data = await res.json();
-    if (data?.state) {
-      const s = data.state;
-      worldState.currentLocation = s.currentLocation || "";
-      worldState.currentThreat   = s.currentThreat   || "";
-      worldState.activeNPCs      = s.activeNPCs      || "";
-      worldState.prevSummary     = s.prevSummary     || "";
-      worldState.dmNotes         = s.dmNotes         || "";
-      worldState.recentEvents    = s.recentEvents    || [];
+    // Прямой запрос к Supabase
+    const data = await sb(`/rest/v1/world_states?session_id=eq.${SESSION_ID}&order=created_at.desc&limit=1`);
+    const state = data?.[0]?.state;
+    if (state) {
+      worldState.currentLocation = state.currentLocation || "";
+      worldState.currentThreat   = state.currentThreat   || "";
+      worldState.activeNPCs      = state.activeNPCs      || "";
+      worldState.prevSummary     = state.prevSummary     || "";
+      worldState.dmNotes         = state.dmNotes         || "";
+      worldState.recentEvents    = state.recentEvents    || [];
       $("ws-location").value     = worldState.currentLocation;
       $("ws-threat").value       = worldState.currentThreat;
       $("ws-npcs").value         = worldState.activeNPCs;
@@ -374,11 +361,11 @@ const loadWorldState = async () => {
     }
   } catch(e) { console.error("World state load error:", e); }
 
-  // Загружаем резюме прошлых сессий кампании
+  // Резюме прошлых сессий
   try {
-    const summRes = await sbFetch(`/api/summaries?campaign_id=${CAMPAIGN_ID}`);
-    if (Array.isArray(summRes) && summRes.length > 0) {
-      const allSummaries = summRes
+    const summaries = await sb(`/rest/v1/summaries?session_id=eq.${SESSION_ID}&select=summary,sessions(name)&order=created_at.desc`);
+    if (Array.isArray(summaries) && summaries.length > 0) {
+      const allSummaries = summaries
         .map(s => `=== ${s.sessions?.name || "Сессия"} ===\n${s.summary}`)
         .join("\n\n");
       worldState.prevSummary = allSummaries;
@@ -394,7 +381,7 @@ const saveWorldState = async () => {
   worldState.prevSummary     = $("ws-prev-summary").value.trim();
   worldState.dmNotes         = $("ws-dm-notes").value.trim();
   try {
-    await sbFetch("/api/world-state", {
+    await sbPost("/api/world-state", {
       method: "POST",
       body: JSON.stringify({ session_id: SESSION_ID, state: worldState }),
     });
@@ -408,8 +395,7 @@ const updateWorldStateFromEvent = async (event) => {
     $("ws-location-auto").textContent = `↑ обновлено автоматически`;
   }
   worldState.recentEvents.push({
-    type: event.type,
-    event: event.event,
+    type: event.type, event: event.event,
     location: event.location || worldState.currentLocation,
   });
   if (worldState.recentEvents.length > 10) worldState.recentEvents.shift();
@@ -434,18 +420,13 @@ const getSessionContext = () => {
   const recentEvents = worldState.recentEvents.slice(-6).map(e =>
     `[${e.type}] ${e.event}${e.location ? ` (локация: ${e.location})` : ""}`
   ).join("\n");
-  const charArts = (s.characters || []).filter(c => c.name && c.art).map(c => ({
-    name: c.name, art: c.art
-  }));
+  const charArts = (s.characters || []).filter(c => c.name && c.art).map(c => ({ name: c.name, art: c.art }));
   return {
-    world:           s.worldName    || "Unknown world",
-    worldDesc:       s.worldDesc    || "",
-    artStyle:        s.artStyle     || "fantasy illustration",
+    world: s.worldName || "Unknown world", worldDesc: s.worldDesc || "",
+    artStyle: s.artStyle || "fantasy illustration",
     currentLocation: worldState.currentLocation || "unknown",
-    currentThreat:   worldState.currentThreat   || "",
-    activeNPCs:      worldState.activeNPCs       || "",
-    prevSummary:     worldState.prevSummary      || "",
-    dmNotes:         worldState.dmNotes          || "",
+    currentThreat: worldState.currentThreat || "", activeNPCs: worldState.activeNPCs || "",
+    prevSummary: worldState.prevSummary || "", dmNotes: worldState.dmNotes || "",
     chars, recentEvents, charArts,
   };
 };
@@ -454,7 +435,7 @@ const getSessionContext = () => {
 const saveTranscript = async (text, chunkNum) => {
   if (!SESSION_ID || !SESSION_TOKEN) return;
   try {
-    await sbFetch("/api/transcripts", {
+    await sbPost("/api/transcripts", {
       method: "POST",
       body: JSON.stringify({ session_id: SESSION_ID, chunk_num: chunkNum, text }),
     });
@@ -537,8 +518,7 @@ Or null.`;
         method: "POST",
         headers: { "Content-Type":"application/json", "x-gemini-key": geminiKey },
         body: JSON.stringify({
-          model: "gemini-2.0-flash",
-          max_tokens: 800,
+          model: "gemini-2.0-flash", max_tokens: 800,
           system: systemPrompt,
           contents: [{ role:"user", parts:[{ text: userPrompt }] }],
         }),
@@ -551,8 +531,7 @@ Or null.`;
         method: "POST",
         headers: { "Content-Type":"application/json", "x-openai-key": openaiKey },
         body: JSON.stringify({
-          model: "gpt-4o",
-          max_tokens: 800,
+          model: "gpt-4o", max_tokens: 800,
           messages: [
             { role:"system", content: systemPrompt },
             { role:"user",   content: userPrompt },
@@ -778,6 +757,7 @@ $("btn-stop").onclick = stopAll;
 loadSessionSettings();
 loadWorldState();
 </script>
+
 <script>
 let jitsiApi = null;
 
@@ -787,81 +767,52 @@ async function toggleJitsi() {
   const status = document.getElementById('jitsi-status');
 
   if (jitsiApi) {
-    jitsiApi.dispose();
-    jitsiApi = null;
-    container.style.display = 'none';
-    status.style.display = 'none';
+    jitsiApi.dispose(); jitsiApi = null;
+    container.style.display = 'none'; status.style.display = 'none';
     btn.textContent = 'Подключиться';
     return;
   }
 
-  btn.textContent = 'Подключение...';
-  btn.disabled = true;
+  btn.textContent = 'Подключение...'; btn.disabled = true;
 
   try {
-    // Получаем JWT токен
     const sbToken = localStorage.getItem('sb-token');
     const campaignId = localStorage.getItem('active-campaign-id') || 'test';
     const characterName = localStorage.getItem('active-campaign-name') || 'Участник';
 
     const resp = await fetch('/api/jitsi-token', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${sbToken}`
-      },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sbToken}` },
       body: JSON.stringify({ room: campaignId, characterName })
     });
 
     const { token } = await resp.json();
     if (!token) throw new Error('Не удалось получить токен');
 
-    // Загружаем Jitsi External API
     await loadScript('https://room.dream-story.ru/external_api.js');
 
-    container.style.display = 'block';
-    status.style.display = 'block';
+    container.style.display = 'block'; status.style.display = 'block';
     status.textContent = 'Подключаюсь...';
 
     jitsiApi = new JitsiMeetExternalAPI('room.dream-story.ru', {
-      roomName: campaignId,
-      jwt: token,
-      parentNode: container,
-      width: '100%',
-      height: 400,
-      configOverwrite: {
-        startWithAudioMuted: false,
-        startWithVideoMuted: true,
-        toolbarButtons: ['microphone', 'hangup', 'tileview'],
-      },
-      interfaceConfigOverwrite: {
-        SHOW_JITSI_WATERMARK: false,
-        SHOW_BRAND_WATERMARK: false,
-        TOOLBAR_ALWAYS_VISIBLE: true,
-      },
+      roomName: campaignId, jwt: token, parentNode: container,
+      width: '100%', height: 400,
+      configOverwrite: { startWithAudioMuted: false, startWithVideoMuted: true, toolbarButtons: ['microphone', 'hangup', 'tileview'] },
+      interfaceConfigOverwrite: { SHOW_JITSI_WATERMARK: false, SHOW_BRAND_WATERMARK: false, TOOLBAR_ALWAYS_VISIBLE: true },
       userInfo: { displayName: characterName }
     });
 
     jitsiApi.on('videoConferenceJoined', () => {
-      status.textContent = '● В эфире';
-      status.style.color = 'var(--accent)';
-      btn.textContent = 'Отключиться';
-      btn.disabled = false;
+      status.textContent = '● В эфире'; status.style.color = 'var(--accent)';
+      btn.textContent = 'Отключиться'; btn.disabled = false;
     });
-
     jitsiApi.on('videoConferenceLeft', () => {
-      jitsiApi = null;
-      container.style.display = 'none';
-      status.style.display = 'none';
-      btn.textContent = 'Подключиться';
-      btn.disabled = false;
+      jitsiApi = null; container.style.display = 'none'; status.style.display = 'none';
+      btn.textContent = 'Подключиться'; btn.disabled = false;
     });
-
   } catch(e) {
-    status.textContent = 'Ошибка: ' + e.message;
-    status.style.display = 'block';
-    btn.textContent = 'Подключиться';
-    btn.disabled = false;
+    status.textContent = 'Ошибка: ' + e.message; status.style.display = 'block';
+    btn.textContent = 'Подключиться'; btn.disabled = false;
   }
 }
 
@@ -869,9 +820,7 @@ function loadScript(src) {
   return new Promise((resolve, reject) => {
     if (document.querySelector(`script[src="${src}"]`)) return resolve();
     const s = document.createElement('script');
-    s.src = src;
-    s.onload = resolve;
-    s.onerror = reject;
+    s.src = src; s.onload = resolve; s.onerror = reject;
     document.head.appendChild(s);
   });
 }
