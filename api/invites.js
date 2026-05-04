@@ -55,7 +55,8 @@ export default async function handler(req, res) {
     const token = req.headers.authorization?.replace("Bearer ", "");
     if (!token) return res.status(401).json({ error: "Unauthorized" });
     const sb = getSupabase(token);
-    const { data: { user } } = await sb.auth.getUser();
+    const authResult = await Promise.race([sb.auth.getUser(), new Promise((_, reject) => setTimeout(() => reject(new Error("Auth timeout")), 5000))]);
+  const user = authResult?.data?.user;
     if (!user) return res.status(401).json({ error: "Unauthorized" });
 
     const body = await getBody(req);
@@ -82,7 +83,8 @@ export default async function handler(req, res) {
     if (!code) return res.status(400).json({ error: "code required" });
 
     const sb = getSupabase(token);
-    const { data: { user } } = await sb.auth.getUser();
+    const authResult = await Promise.race([sb.auth.getUser(), new Promise((_, reject) => setTimeout(() => reject(new Error("Auth timeout")), 5000))]);
+  const user = authResult?.data?.user;
     if (!user) return res.status(401).json({ error: "Unauthorized" });
 
     const body = await getBody(req);
