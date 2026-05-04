@@ -168,9 +168,15 @@ if (!SESSION_ID || !SESSION_TOKEN) window.location.href = "/";
 
 $("session-name").textContent = SESSION_NAME;
 
-const sbFetch = (path) => fetch(path, {
-  headers: { "Authorization": `Bearer ${SESSION_TOKEN}` }
-}).then(r => r.json());
+const sbFetch = (path) => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  return fetch(path, {
+    signal: controller.signal,
+    headers: { "Authorization": `Bearer ${SESSION_TOKEN}` }
+  }).then(r => { clearTimeout(timeout); return r.json(); })
+    .catch(e => { clearTimeout(timeout); console.error(path, e.message); return null; });
+};
 
 $("btn-record").onclick = () => window.location.href = "/record.html";
 $("btn-viz").onclick = () => window.open(`/viz.html?session=${SESSION_ID}`, "_blank");
