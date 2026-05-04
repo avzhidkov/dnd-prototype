@@ -27,7 +27,7 @@ export default async function handler(req, res) {
   }
 
   const jitsiToken = jwt.sign({
-    aud: APP_ID,
+    aud: 'jitsi',
     iss: APP_ID,
     sub: JITSI_HOST,
     room: room,
