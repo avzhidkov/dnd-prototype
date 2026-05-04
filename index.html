@@ -57,8 +57,6 @@ body { font-family: monospace; background: var(--bg); color: var(--text); min-he
 .modal-inp { width:100%; background:var(--input-bg); border:1px solid var(--input-border); border-radius:3px; padding:.5rem .75rem; color:var(--text); font-family:monospace; font-size:13px; outline:none; transition:border-color .2s; }
 .modal-inp:focus { border-color:var(--accent); }
 .modal-row { display:flex; gap:.75rem; }
-
-/* Profile */
 .profile-box { background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:1.5rem; margin-bottom:1rem; }
 .profile-box-title { font-size:10px; letter-spacing:.1em; color:var(--dim); margin-bottom:1rem; padding-bottom:.6rem; border-bottom:1px solid var(--border2); }
 .char-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:.75rem; }
@@ -141,13 +139,13 @@ body { font-family: monospace; background: var(--bg); color: var(--text); min-he
     <span class="section-header-title">ПРОФИЛЬ</span>
   </div>
 
-<div class="profile-box">
+  <div class="profile-box">
     <div class="profile-box-title">АККАУНТ</div>
     <div style="font-size:13px;color:var(--text);margin-bottom:.5rem;" id="profile-email"></div>
     <div style="font-size:11px;color:var(--faint);margin-bottom:1rem;" id="profile-since"></div>
     <div style="font-size:10px;letter-spacing:.08em;color:var(--muted);margin-bottom:.35rem;">КАК ТЕБЯ ЗОВУТ</div>
     <div style="display:flex;gap:.5rem;">
-      <input type="text" id="profile-display-name" placeholder="Имя или ник..." 
+      <input type="text" id="profile-display-name" placeholder="Имя или ник..."
         style="flex:1;background:var(--input-bg);border:1px solid var(--input-border);border-radius:3px;padding:.45rem .75rem;color:var(--text);font-family:monospace;font-size:12px;outline:none;" />
       <button class="btn primary" id="btn-save-name" style="flex-shrink:0;">Сохранить</button>
     </div>
@@ -188,7 +186,6 @@ body { font-family: monospace; background: var(--bg); color: var(--text); min-he
 </div>
 
 <script>
-// ── Theme ─────────────────────────────────────
 document.documentElement.setAttribute("data-theme", localStorage.getItem("theme") || "dark");
 const _tb = document.getElementById("theme-btn");
 _tb.textContent = (localStorage.getItem("theme")||"dark") === "dark" ? "☀" : "☾";
@@ -200,15 +197,23 @@ _tb.onclick = () => {
 };
 
 const SUPABASE_URL = "https://mbysjfsuqeqjcedgfdmb.supabase.co";
-const SUPABASE_KEY = "sb_publishable_V-Ug9nyp6XPVBIJ3tr3qww_VjwGLg6Z";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ieXNqZnN1cWVxamNlZGdmZG1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3ODE4NDYsImV4cCI6MjA5MjM1Nzg0Nn0.iAX_wA1YvvwPZpNQz5iVchpbUrw9RQ2i592ePEdc9o8";
 const $ = id => document.getElementById(id);
 let token = null;
 let currentUser = null;
 
-const sbFetch = (path, opts = {}) => fetch(`${SUPABASE_URL}${path}`, {
+// Прямой запрос к Supabase (быстро, для GET)
+const sb = (path, opts = {}) => fetch(`${SUPABASE_URL}${path}`, {
   ...opts,
-  headers: { "Content-Type":"application/json", "apikey": SUPABASE_KEY, "Authorization": `Bearer ${token||SUPABASE_KEY}`, ...(opts.headers||{}) },
-});
+  headers: {
+    "Content-Type": "application/json",
+    "apikey": SUPABASE_KEY,
+    "Authorization": `Bearer ${token || SUPABASE_KEY}`,
+    ...(opts.headers || {}),
+  },
+}).then(r => r.json());
+
+// Через Vercel (только POST/DELETE)
 const api = (path, opts = {}) => fetch(path, {
   ...opts,
   headers: { "Content-Type":"application/json", "Authorization": `Bearer ${token}`, ...(opts.headers||{}) },
@@ -219,7 +224,9 @@ const checkSession = async () => {
   const stored = localStorage.getItem("sb-token");
   if (!stored) return showAuth();
   token = stored;
-  const res = await sbFetch("/auth/v1/user");
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${token}` }
+  });
   if (!res.ok) { localStorage.removeItem("sb-token"); return showAuth(); }
   showHome(await res.json());
 };
@@ -263,13 +270,19 @@ const logout = () => {
 };
 $("btn-logout").onclick = logout;
 $("profile-logout").onclick = logout;
+
 $("btn-save-name").onclick = async () => {
   const name = $("profile-display-name").value.trim();
   if (!name) return;
-  await sbFetch(`/rest/v1/profiles?id=eq.${currentUser.id}`, {
+  await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${currentUser.id}`, {
     method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": SUPABASE_KEY,
+      "Authorization": `Bearer ${token}`,
+      "Prefer": "return=minimal",
+    },
     body: JSON.stringify({ display_name: name }),
-    headers: { "Prefer": "return=minimal" },
   });
   const el = $("name-saved");
   el.style.opacity = 1;
@@ -282,14 +295,28 @@ if (accessToken) {
   token = accessToken;
   localStorage.setItem("sb-token", token);
   window.history.replaceState({}, "", "/");
-  sbFetch("/auth/v1/user").then(r => r.json()).then(showHome);
+  fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${token}` }
+  }).then(r => r.json()).then(showHome);
 } else { checkSession(); }
 
 // ── Campaigns ─────────────────────────────────
 const loadCampaigns = async () => {
-  const data = await api("/api/campaigns");
+  // Кампании где я владелец
+  const owned = await sb(`/rest/v1/campaigns?user_id=eq.${currentUser.id}&order=created_at.desc`);
+  // Кампании где я участник через инвайт
+  const invites = await sb(`/rest/v1/session_invites?used_by=eq.${currentUser.id}&select=campaign_id`);
+  const invitedIds = [...new Set((invites || []).map(i => i.campaign_id).filter(Boolean))];
+  let invited = [];
+  if (invitedIds.length > 0) {
+    invited = await sb(`/rest/v1/campaigns?id=in.(${invitedIds.join(",")})&order=created_at.desc`);
+  }
+  // Объединяем без дублей
+  const allIds = new Set((owned || []).map(c => c.id));
+  const data = [...(owned || []), ...(invited || []).filter(c => !allIds.has(c.id))];
+
   const list = $("campaigns-list");
-  if (!Array.isArray(data) || data.length === 0) {
+  if (!data.length) {
     list.innerHTML = '<div class="empty">Нет партий.<br>Создай первую!</div>';
     return;
   }
@@ -316,26 +343,21 @@ const loadCampaigns = async () => {
 
 // ── Profile ───────────────────────────────────
 const loadProfile = async () => {
-  // Персонажи
   const charsGrid = $("chars-grid");
   charsGrid.innerHTML = '<div class="empty" style="padding:1.5rem;grid-column:1/-1;">Загрузка...</div>';
 
   try {
-    // Загружаем display_name
-    const profileRes = await sbFetch(`/rest/v1/profiles?select=display_name&id=eq.${currentUser.id}`);
-    const profileData = Array.isArray(profileRes) ? profileRes[0] : null;
-    if (profileData?.display_name) {
-      $("profile-display-name").value = profileData.display_name;
+    const profileData = await sb(`/rest/v1/profiles?select=display_name&id=eq.${currentUser.id}`);
+    if (profileData?.[0]?.display_name) {
+      $("profile-display-name").value = profileData[0].display_name;
     }
 
-    const campaigns = await api("/api/campaigns");
-    const campaignMap = {};
-    (campaigns || []).forEach(c => { campaignMap[c.id] = c.name; });
+    const campaigns = await sb(`/rest/v1/campaigns?user_id=eq.${currentUser.id}&order=created_at.desc`);
 
-    // Загружаем персонажей из всех кампаний
+    // Персонажи из всех кампаний
     const allChars = [];
     for (const c of (campaigns || [])) {
-      const chars = await api(`/api/characters?campaign_id=${c.id}`);
+      const chars = await sb(`/rest/v1/characters?campaign_id=eq.${c.id}`);
       if (Array.isArray(chars)) {
         chars.filter(ch => ch.user_id === currentUser?.id || !ch.user_id).forEach(ch => {
           allChars.push({ ...ch, campaignName: c.name });
@@ -344,7 +366,6 @@ const loadProfile = async () => {
     }
 
     $("chars-count").textContent = allChars.length ? `(${allChars.length})` : "";
-
     if (allChars.length === 0) {
       charsGrid.innerHTML = '<div class="empty" style="padding:1.5rem;grid-column:1/-1;">Нет персонажей</div>';
     } else {
@@ -364,7 +385,6 @@ const loadProfile = async () => {
       });
     }
 
-    // Активные кампании
     const campList = $("profile-campaigns-list");
     $("campaigns-count").textContent = campaigns?.length ? `(${campaigns.length})` : "";
     if (!campaigns?.length) {

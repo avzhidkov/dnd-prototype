@@ -43,8 +43,6 @@ body { font-family: monospace; background: var(--bg); color: var(--text); min-he
 .modal-inp { width:100%; background:var(--input-bg); border:1px solid var(--input-border); border-radius:3px; padding:.5rem .75rem; color:var(--text); font-family:monospace; font-size:13px; outline:none; transition:border-color .2s; }
 .modal-inp:focus { border-color:var(--accent); }
 .modal-row { display:flex; gap:.75rem; }
-
-/* Participants */
 .box { background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:1.25rem 1.5rem; margin-bottom:1rem; }
 .box-title { font-size:10px; letter-spacing:.12em; color:var(--dim); margin-bottom:1rem; padding-bottom:.6rem; border-bottom:1px solid var(--border2); display:flex; align-items:center; justify-content:space-between; }
 .members-grid { display:flex; flex-wrap:wrap; gap:.75rem; }
@@ -71,7 +69,6 @@ body { font-family: monospace; background: var(--bg); color: var(--text); min-he
 
 <div class="page">
 
-  <!-- Участники -->
   <div class="box">
     <div class="box-title">
       УЧАСТНИКИ
@@ -82,7 +79,6 @@ body { font-family: monospace; background: var(--bg); color: var(--text); min-he
     </div>
   </div>
 
-  <!-- Сессии -->
   <div class="page-header">
     <span class="page-title">СЕССИИ</span>
     <div class="header-actions">
@@ -106,7 +102,6 @@ body { font-family: monospace; background: var(--bg); color: var(--text); min-he
 </div>
 
 <script>
-// ── Theme ─────────────────────────────────────
 document.documentElement.setAttribute("data-theme", localStorage.getItem("theme") || "dark");
 const _tb = document.getElementById("theme-btn");
 _tb.textContent = (localStorage.getItem("theme")||"dark") === "dark" ? "☀" : "☾";
@@ -119,7 +114,7 @@ _tb.onclick = () => {
 
 const $ = id => document.getElementById(id);
 const SUPABASE_URL = "https://mbysjfsuqeqjcedgfdmb.supabase.co";
-const SUPABASE_KEY = "sb_publishable_V-Ug9nyp6XPVBIJ3tr3qww_VjwGLg6Z";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ieXNqZnN1cWVxamNlZGdmZG1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3ODE4NDYsImV4cCI6MjA5MjM1Nzg0Nn0.iAX_wA1YvvwPZpNQz5iVchpbUrw9RQ2i592ePEdc9o8";
 const CAMPAIGN_ID   = localStorage.getItem("active-campaign-id");
 const CAMPAIGN_NAME = localStorage.getItem("active-campaign-name") || "Кампания";
 const TOKEN         = localStorage.getItem("sb-token");
@@ -129,33 +124,37 @@ if (!CAMPAIGN_ID || !TOKEN) window.location.href = "/";
 $("nav-campaign").textContent = CAMPAIGN_NAME;
 $("nav-viz-campaign").href = `/viz.html?campaign=${CAMPAIGN_ID}`;
 
+// Прямой запрос к Supabase (быстро)
+const sb = (path, opts = {}) => fetch(`${SUPABASE_URL}${path}`, {
+  ...opts,
+  headers: {
+    "Content-Type": "application/json",
+    "apikey": SUPABASE_KEY,
+    "Authorization": `Bearer ${TOKEN}`,
+    ...(opts.headers || {}),
+  },
+}).then(r => r.json());
+
+// Через Vercel (только для POST/DELETE/инвайты)
 const api = (path, opts = {}) => fetch(path, {
   ...opts,
   headers: { "Content-Type":"application/json", "Authorization": `Bearer ${TOKEN}`, ...(opts.headers||{}) },
-}).then(r => r.json());
-
-const sbFetch = (path, opts = {}) => fetch(`${SUPABASE_URL}${path}`, {
-  ...opts,
-  headers: { "Content-Type":"application/json", "apikey":SUPABASE_KEY, "Authorization":`Bearer ${TOKEN}`, ...(opts.headers||{}) },
 }).then(r => r.json());
 
 // ── Участники ─────────────────────────────────
 const loadMembers = async () => {
   const grid = $("members-grid");
   try {
-    const campaigns = await api("/api/campaigns");
-    const campaign = (campaigns || []).find(c => c.id === CAMPAIGN_ID);
-    const ownerId = campaign?.user_id;
+    const campaigns = await sb(`/rest/v1/campaigns?id=eq.${CAMPAIGN_ID}&select=user_id`);
+    const ownerId = campaigns?.[0]?.user_id;
 
-    // Инвайты с used_by
-    const invites = await sbFetch(`/rest/v1/session_invites?select=used_by&campaign_id=eq.${CAMPAIGN_ID}&used_by=not.is.null`);
+    const invites = await sb(`/rest/v1/session_invites?select=used_by&campaign_id=eq.${CAMPAIGN_ID}&used_by=not.is.null`);
     const memberIds = [...new Set([
       ...(ownerId ? [ownerId] : []),
       ...(invites || []).map(i => i.used_by).filter(Boolean)
     ])];
 
-    // Загружаем профили
-    const profiles = await sbFetch(`/rest/v1/profiles?select=id,email,display_name&id=in.(${memberIds.join(",")})`);
+    const profiles = await sb(`/rest/v1/profiles?select=id,email,display_name&id=in.(${memberIds.join(",")})`);
 
     $("members-count").textContent = `(${memberIds.length})`;
     grid.innerHTML = "";
@@ -182,7 +181,7 @@ const loadMembers = async () => {
 
 // ── Сессии ────────────────────────────────────
 const loadSessions = async () => {
-  const data = await api(`/api/sessions?campaign_id=${CAMPAIGN_ID}`);
+  const data = await sb(`/rest/v1/sessions?campaign_id=eq.${CAMPAIGN_ID}&order=created_at.desc`);
   const list = $("sessions-list");
   if (!Array.isArray(data) || data.length === 0) {
     list.innerHTML = '<div class="empty">Нет сессий.<br>Создай первую!</div>';
@@ -220,6 +219,7 @@ const openSession = (id, name) => {
   window.location.href = "/session.html";
 };
 const openViz = (id) => window.open(`/viz.html?session=${id}`, "_blank");
+
 const inviteToSession = async (sessionId) => {
   const res = await fetch("/api/invites", {
     method: "POST",
@@ -235,6 +235,7 @@ const inviteToSession = async (sessionId) => {
     alert("Ошибка: " + (data.error || "unknown"));
   }
 };
+
 const deleteSession = async (e, id) => {
   e.stopPropagation();
   if (!confirm("Удалить сессию и все её данные?")) return;

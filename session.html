@@ -42,7 +42,6 @@ button:disabled { opacity:.4; cursor:default; }
 .ev-node { position:relative; margin-bottom:1.25rem; }
 .ev-pip { position:absolute; left:-1.35rem; top:.7rem; width:11px; height:11px; border-radius:50%; border:2px solid; background:var(--bg); flex-shrink:0; }
 .ev-card { background:var(--bg3); border:1px solid var(--border); border-radius:4px; padding:.85rem 1rem; transition:border-color .2s; }
-.ev-card:hover { border-color:var(--border); }
 .ev-card.has-image { border-color:rgba(74,175,114,.2); }
 .ev-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:.5rem; flex-wrap:wrap; gap:.5rem; }
 .ev-type { font-size:10px; letter-spacing:.1em; padding:.15rem .5rem; border-radius:2px; border:1px solid; }
@@ -147,7 +146,6 @@ button:disabled { opacity:.4; cursor:default; }
 </div>
 
 <script>
-// ── Theme ─────────────────────────────────────
 document.documentElement.setAttribute("data-theme", localStorage.getItem("theme") || "dark");
 const _tb = document.getElementById("theme-btn");
 _tb.textContent = (localStorage.getItem("theme")||"dark") === "dark" ? "☀" : "☾";
@@ -159,6 +157,9 @@ _tb.onclick = () => {
 };
 
 const $ = id => document.getElementById(id);
+
+const SUPABASE_URL  = "https://mbysjfsuqeqjcedgfdmb.supabase.co";
+const SUPABASE_KEY  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ieXNqZnN1cWVxamNlZGdmZG1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3ODE4NDYsImV4cCI6MjA5MjM1Nzg0Nn0.iAX_wA1YvvwPZpNQz5iVchpbUrw9RQ2i592ePEdc9o8";
 const SESSION_ID    = localStorage.getItem("active-session-id");
 const SESSION_TOKEN = localStorage.getItem("sb-token");
 const SESSION_NAME  = localStorage.getItem("active-session-name") || "Сессия";
@@ -168,8 +169,9 @@ if (!SESSION_ID || !SESSION_TOKEN) window.location.href = "/";
 
 $("session-name").textContent = SESSION_NAME;
 
-const sbFetch = (path) => fetch(path, {
-  headers: { "Authorization": `Bearer ${SESSION_TOKEN}` }
+// Прямой запрос к Supabase (быстро)
+const sb = (path) => fetch(`${SUPABASE_URL}${path}`, {
+  headers: { "apikey": SUPABASE_KEY, "Authorization": `Bearer ${SESSION_TOKEN}` }
 }).then(r => r.json());
 
 $("btn-record").onclick = () => window.location.href = "/record.html";
@@ -178,13 +180,15 @@ $("btn-viz").onclick = () => window.open(`/viz.html?session=${SESSION_ID}`, "_bl
 const openLightbox = (src) => { $("lightbox-img").src=src; $("lightbox").classList.add("open"); };
 
 const loadAll = async () => {
-  const [events, transcripts, worldStateRes] = await Promise.all([
-    sbFetch(`/api/events?session_id=${SESSION_ID}`),
-    sbFetch(`/api/transcripts?session_id=${SESSION_ID}`),
-    sbFetch(`/api/world-state?session_id=${SESSION_ID}`),
+  const [events, transcripts, worldStateArr] = await Promise.all([
+    sb(`/rest/v1/events?session_id=eq.${SESSION_ID}&order=created_at.asc`),
+    sb(`/rest/v1/transcripts?session_id=eq.${SESSION_ID}&order=created_at.asc`),
+    sb(`/rest/v1/world_states?session_id=eq.${SESSION_ID}&order=created_at.desc&limit=1`),
   ]);
 
+  const worldStateRes = worldStateArr?.[0] ? { state: worldStateArr[0].state } : null;
   const images = Array.isArray(events) ? events.filter(e => e.image_url) : [];
+
   $("stat-events").textContent  = Array.isArray(events) ? events.length : 0;
   $("stat-images").textContent  = images.length;
   $("stat-chunks").textContent  = Array.isArray(transcripts) ? transcripts.length : 0;
@@ -274,11 +278,12 @@ $("btn-toggle-transcripts").onclick = () => {
 };
 
 const loadSummary = async () => {
-  const data = await sbFetch(`/api/summaries?session_id=${SESSION_ID}`);
-  if (data?.summary) {
+  const data = await sb(`/rest/v1/summaries?session_id=eq.${SESSION_ID}&order=created_at.desc&limit=1`);
+  const summary = data?.[0]?.summary;
+  if (summary) {
     $("summary-content").style.fontStyle="normal";
     $("summary-content").style.color="var(--text)";
-    $("summary-content").innerHTML=data.summary.replace(/\n/g,"<br>");
+    $("summary-content").innerHTML=summary.replace(/\n/g,"<br>");
   }
 };
 
