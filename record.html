@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<title>DreamStory — Запись</title>
+<link rel="stylesheet" href="/theme.css" />
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: monospace; background: var(--bg); color: var(--text); min-height: 100vh; transition: background .2s, color .2s; }
+.nav { display:flex; align-items:center; background:var(--bg2); border-bottom:1px solid var(--border); padding:0 1.5rem; height:46px; position:sticky; top:0; z-index:10; }
+.nav-brand { font-size:12px; letter-spacing:.18em; color:var(--accent); flex-shrink:0; }
+.nav-session { font-size:11px; color:var(--faint); flex:1; padding:0 1.5rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.nav-links { display:flex; align-items:center; gap:.25rem; flex-shrink:0; }
+.nav-link { font-family:monospace; font-size:10px; letter-spacing:.08em; color:var(--dim); text-decoration:none; padding:.3rem .7rem; border:1px solid transparent; border-radius:3px; transition:all .2s; white-space:nowrap; }
+.nav-link:hover { color:var(--text); border-color:var(--border); }
+.nav-link.active { color:var(--accent); border-color:rgba(74,175,114,.3); }
+.page { padding:1.75rem 1.5rem; max-width:780px; margin:0 auto; }
+.box { background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:1.25rem 1.5rem; margin-bottom:1rem; }
+.box-title { font-size:10px; letter-spacing:.12em; color:var(--dim); margin-bottom:1rem; padding-bottom:.6rem; border-bottom:1px solid var(--border2); }
+.row { display:flex; align-items:center; gap:.75rem; margin-bottom:.6rem; }
+.row:last-child { margin-bottom:0; }
+label { font-size:12px; color:var(--muted); flex-shrink:0; min-width:90px; }
+input[type=text], input[type=password] { flex:1; background:var(--input-bg); border:1px solid var(--input-border); border-radius:3px; padding:.45rem .75rem; color:var(--text); font-family:monospace; font-size:12px; outline:none; transition:border-color .2s; }
+input:focus { border-color:var(--blue); }
+textarea { width:100%; background:var(--input-bg); border:1px solid var(--input-border); border-radius:3px; padding:.6rem .75rem; color:var(--text); font-family:monospace; font-size:12px; outline:none; resize:vertical; line-height:1.6; transition:border-color .2s; }
+textarea:focus { border-color:#4a8fcc; }
+button { font-family:monospace; font-size:11px; letter-spacing:.1em; padding:.5rem 1.1rem; border:1px solid var(--border); background:transparent; color:var(--muted); cursor:pointer; border-radius:3px; transition:all .2s; }
+button:hover:not(:disabled) { border-color:var(--accent); color:var(--accent); }
+button:disabled { opacity:.3; cursor:default; }
+button.stop { border-color:rgba(192,80,64,.4); color:var(--red); }
+button.stop:hover:not(:disabled) { background:var(--red2); }
+button.primary { border-color:rgba(74,175,114,.5); color:var(--accent); }
+button.primary:hover:not(:disabled) { background:var(--accent2); }
+.dot { width:8px; height:8px; border-radius:50%; background:var(--border); transition:background .3s; flex-shrink:0; }
+.dot.on { background:var(--accent); box-shadow:0 0 6px rgba(74,175,114,.5); }
+.dot.err { background:var(--red); }
+.dot.busy { background:#f0c040; animation:pulse 1s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.timer { font-size:28px; font-weight:bold; color:var(--accent); text-align:center; letter-spacing:.05em; margin:.5rem 0; }
+.stat-row { display:flex; justify-content:space-between; font-size:11px; color:var(--dim); padding:.2rem 0; }
+.stat-val { color:var(--muted); }
+.transcript { background:var(--input-bg); border:1px solid var(--input-border); border-radius:4px; padding:1rem; min-height:100px; max-height:220px; overflow-y:auto; font-size:13px; line-height:1.85; color:var(--muted); }
+.chunk-block { margin-bottom:.75rem; padding-bottom:.75rem; border-bottom:1px solid var(--border2); }
+.chunk-block:last-child { border-bottom:none; margin-bottom:0; }
+.chunk-meta { font-size:10px; color:var(--dim); margin-bottom:.3rem; }
+.chunk-text { color:var(--text); opacity:.85; }
+.chunk-pending { color:var(--faint); font-style:italic; }
+.log-box { font-size:11px; color:var(--dim); line-height:1.8; max-height:90px; overflow-y:auto; }
+.log-box .ok  { color:var(--accent); display:block; }
+.log-box .err { color:var(--red); display:block; }
+.log-box .inf { color:var(--muted); display:block; }
+.empty { color:var(--faint); font-style:italic; font-size:12px; }
+.meter-wrap { display:flex; align-items:center; gap:.6rem; margin-bottom:.4rem; }
+.meter-label { font-size:11px; color:#555; flex-shrink:0; width:80px; }
+.meter-bar { flex:1; height:3px; background:var(--border2); border-radius:2px; overflow:hidden; }
+.meter-fill { height:100%; width:0%; background:#4caf72; border-radius:2px; transition:width .08s ease-out; }
+.meter-fill.mid { background:#f0c040; }
+.meter-fill.hot { background:#c05040; }
+.meter-val { font-size:11px; color:#444; min-width:32px; text-align:right; }
+.events-list { display:flex; flex-direction:column; gap:.6rem; }
+.event-card { background:var(--bg3); border:1px solid var(--border); border-radius:4px; padding:.85rem 1rem; }
+.event-card.has-image { border-color:rgba(74,175,114,.2); }
+.event-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:.5rem; }
+.event-type { font-size:10px; letter-spacing:.1em; padding:.15rem .5rem; border-radius:2px; border:1px solid; }
+.event-type.combat    { color:#e85d4a; border-color:#e85d4a40; background:#e85d4a10; }
+.event-type.dialogue  { color:#4a9eed; border-color:#4a9eed40; background:#4a9eed10; }
+.event-type.discovery { color:#f5c842; border-color:#f5c84240; background:#f5c84210; }
+.event-type.travel    { color:#5dba7f; border-color:#5dba7f40; background:#5dba7f10; }
+.event-type.magic     { color:#c084f0; border-color:#c084f040; background:#c084f010; }
+.event-type.plot      { color:#f0884a; border-color:#f0884a40; background:#f0884a10; }
+.event-type.other     { color:#888; border-color:#33333380; background:#1a1a1a; }
+.event-time { font-size:10px; color:#333; }
+.event-desc { font-size:13px; color:#bbb; line-height:1.6; margin-bottom:.5rem; }
+.event-chars { display:flex; flex-wrap:wrap; gap:.3rem; }
+.event-char { font-size:10px; color:var(--muted); background:var(--bg2); border:1px solid var(--border); border-radius:2px; padding:.1rem .45rem; }
+.event-prompt { font-size:10px; color:#3a5a3a; font-style:italic; margin-top:.5rem; line-height:1.5; border-top:1px solid var(--border2); padding-top:.5rem; }
+.img-badge { font-size:10px; color:var(--accent); letter-spacing:.06em; }
+.no-events { color:var(--faint); font-style:italic; font-size:12px; text-align:center; padding:1.5rem 0; }
+.settings-hint { font-size:11px; color:#333; font-style:italic; }
+.field-label { font-size:10px; letter-spacing:.08em; color:#555; display:block; margin-bottom:.35rem; }
+.ws-grid { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
+@media(max-width:600px){ .ws-grid { grid-template-columns:1fr; } }
+.ws-field { display:flex; flex-direction:column; gap:.3rem; }
+.ws-field label { font-size:10px; letter-spacing:.08em; color:var(--muted); }
+.ws-field input { width:100%; }
+.ws-val { font-size:11px; color:var(--blue); font-style:italic; min-height:16px; }
+.briefing-actions { display:flex; gap:.75rem; align-items:center; margin-top:.5rem; }
+.radio-group { display:flex; gap:.75rem; align-items:center; }
+.radio-group label { min-width:unset; display:flex; align-items:center; gap:.35rem; cursor:pointer; font-size:12px; color:var(--muted); }
+.radio-group label:hover { color:var(--text); }
+.radio-group input[type=radio] { accent-color:var(--accent); cursor:pointer; }
+.keys-saved { font-size:11px; color:var(--accent); opacity:0; transition:opacity .3s; margin-left:auto; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <span class="nav-brand">✦ DREAMSTORY</span>
+  <span class="nav-session" id="session-name"></span>
+  <div class="nav-links">
+    <a class="nav-link" href="/">← Кампании</a>
+    <a class="nav-link" id="nav-campaign" href="/campaign.html">Сессии</a>
+    <a class="nav-link active" href="/record.html">Запись</a>
+    <a class="nav-link" href="/settings.html">Настройки</a>
+    <a class="nav-link" id="nav-viz" href="/viz.html">Визуализация</a>
+    <button style="background:none;border:1px solid var(--border);border-radius:3px;padding:.3rem .6rem;cursor:pointer;font-size:13px;color:var(--dim);transition:all .2s;margin-left:.5rem;" id="theme-btn">☀</button>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- API ключи -->
+  <div class="box">
+    <div class="box-title">ПАРАМЕТРЫ</div>
+
+    <div class="row">
+      <label>OpenAI</label>
+      <input type="password" id="openai-key" placeholder="sk-... (Whisper + image gen)" />
+    </div>
+    <div class="row">
+      <label>Groq</label>
+      <input type="password" id="groq-key" placeholder="gsk_... (транскрипция, бесплатно)" />
+    </div>
+
+    <div class="row">
+      <label>Нарратив</label>
+      <div class="radio-group">
+        <label><input type="radio" name="narrative-engine" value="gpt" id="engine-gpt" checked /> GPT-4o</label>
+        <label><input type="radio" name="narrative-engine" value="gemini" id="engine-gemini" /> Gemini</label>
+      </div>
+      <span class="keys-saved" id="keys-saved">Сохранено ✓</span>
+    </div>
+
+    <div class="row" id="gemini-row" style="display:none;">
+      <label>Gemini</label>
+      <input type="password" id="gemini-key" placeholder="AIza... (нарратив)" />
+    </div>
+
+    <div class="row">
+      <label>Язык</label>
+      <input type="text" id="lang" value="ru" style="max-width:60px;" />
+      <label style="min-width:unset;">Чанк (сек)</label>
+      <input type="text" id="chunk-sec" value="30" style="max-width:60px;" />
+      <label style="min-width:unset;">VAD порог</label>
+      <input type="text" id="vad-threshold" value="10" style="max-width:60px;" />
+    </div>
+    <div class="row"><span class="settings-hint" id="settings-hint">Загружаю настройки...</span></div>
+  </div>
+
+  <!-- World State + Pre-session briefing -->
+  <div class="box">
+    <div class="box-title">СОСТОЯНИЕ МИРА ПЕРЕД СЕССИЕЙ</div>
+
+    <div class="ws-grid" style="margin-bottom:.85rem;">
+      <div class="ws-field">
+        <label>ТЕКУЩАЯ ЛОКАЦИЯ</label>
+        <input type="text" id="ws-location" placeholder="Подвал особняка Вольфа..." />
+        <span class="ws-val" id="ws-location-auto"></span>
+      </div>
+      <div class="ws-field">
+        <label>ТЕКУЩАЯ УГРОЗА / НАПРЯЖЕНИЕ</label>
+        <input type="text" id="ws-threat" placeholder="Некромант где-то в подвале..." />
+      </div>
+    </div>
+
+    <div style="margin-bottom:.85rem;">
+      <label class="field-label">ЧТО ПРОИЗОШЛО В ПРОШЛОЙ СЕССИИ (кратко)</label>
+      <textarea id="ws-prev-summary" rows="2" placeholder="Партия нашла дневник графа. Сигурд ранен зомби..."></textarea>
+    </div>
+
+    <div style="margin-bottom:.85rem;">
+      <label class="field-label">АКТИВНЫЕ NPC РЯДОМ С ПАРТИЕЙ</label>
+      <input type="text" id="ws-npcs" placeholder="Граф Алекс (пленник), Слуга Борис (мёртв)..." />
+    </div>
+
+    <div>
+      <label class="field-label">ЗАМЕТКИ ДМ / ОСОБЫЕ УСЛОВИЯ ЭТОЙ СЕССИИ</label>
+      <textarea id="ws-dm-notes" rows="2" placeholder="Сегодня финальная битва. Партия истощена..."></textarea>
+    </div>
+
+    <div class="briefing-actions">
+      <button class="primary" id="btn-save-briefing">Сохранить контекст</button>
+      <span style="font-size:11px;color:#333;font-style:italic;" id="briefing-saved"></span>
+    </div>
+  </div>
+
+  <!-- Статус -->
+  <div class="box">
+    <div class="box-title">СТАТУС</div>
+    <div class="row"><span style="font-size:12px;color:#555;">Вкладка</span><div class="dot" id="dot-tab"></div></div>
+    <div class="row"><span style="font-size:12px;color:#555;">Микрофон</span><div class="dot" id="dot-mic"></div></div>
+    <div class="meter-wrap"><span class="meter-label">mic level</span><div class="meter-bar"><div class="meter-fill" id="meter-mic"></div></div><span class="meter-val" id="meter-mic-val">—</span></div>
+    <div class="meter-wrap"><span class="meter-label">tab level</span><div class="meter-bar"><div class="meter-fill" id="meter-tab"></div></div><span class="meter-val" id="meter-tab-val">—</span></div>
+    <div class="row"><span style="font-size:12px;color:#555;">Запись</span><div class="dot" id="dot-rec"></div></div>
+    <div class="row"><span style="font-size:12px;color:#555;">Whisper</span><div class="dot" id="dot-wh"></div></div>
+    <div class="row"><span style="font-size:12px;color:#555;">Нарратив</span><div class="dot" id="dot-claude"></div></div>
+    <div class="timer" id="timer">00:00</div>
+    <div class="row" style="justify-content:center;gap:1rem;">
+      <button id="btn-start">▶ СТАРТ</button>
+      <button id="btn-stop" class="stop" disabled>■ СТОП</button>
+    </div>
+  </div>
+
+  <!-- Статистика -->
+  <div class="box">
+    <div class="box-title">СТАТИСТИКА</div>
+    <div class="stat-row"><span>Чанков / событий</span><span class="stat-val"><span id="s-chunks">0</span> / <span id="s-events">0</span></span></div>
+    <div class="stat-row"><span>Минут аудио</span><span class="stat-val" id="s-mins">0.0</span></div>
+    <div class="stat-row"><span>Стоимость транскрипции</span><span class="stat-val" id="s-cost-w">$0.000</span></div>
+    <div class="stat-row"><span>Стоимость нарратива (est.)</span><span class="stat-val" id="s-cost-c">$0.000</span></div>
+  </div>
+
+  <!-- Транскрипт -->
+  <div class="box">
+    <div class="box-title">ТРАНСКРИПТ</div>
+    <div class="transcript" id="transcript"><span class="empty">Здесь появится текст...</span></div>
+  </div>
+
+  <!-- События -->
+  <div class="box">
+    <div class="box-title">СОБЫТИЯ <span id="events-count" style="color:#333;font-size:10px;"></span></div>
+    <div class="events-list" id="events-list"><div class="no-events">Событий пока нет...</div></div>
+  </div>
+
+  <!-- Лог -->
+  <div class="box">
+    <div class="box-title">ЛОГ</div>
+    <div class="log-box" id="log"></div>
+  </div>
+
+</div>
+
+<script>
+// ── Theme ─────────────────────────────────────
+document.documentElement.setAttribute("data-theme", localStorage.getItem("theme") || "dark");
+const _tb = document.getElementById("theme-btn");
+_tb.textContent = (localStorage.getItem("theme")||"dark") === "dark" ? "☀" : "☾";
+_tb.onclick = () => {
+  const t = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", t);
+  localStorage.setItem("theme", t);
+  _tb.textContent = t === "dark" ? "☀" : "☾";
+};
+
+const $ = id => document.getElementById(id);
+
+// ── Session ───────────────────────────────────
+const SESSION_ID    = localStorage.getItem("active-session-id");
+const CAMPAIGN_ID   = localStorage.getItem("active-campaign-id");
+const SESSION_TOKEN = localStorage.getItem("sb-token");
+const SESSION_NAME  = localStorage.getItem("active-session-name") || "Сессия";
+
+if (!SESSION_ID || !SESSION_TOKEN) window.location.href = "/";
+
+$("session-name").textContent = SESSION_NAME;
+const vizLink = $("nav-viz");
+if (vizLink && SESSION_ID) vizLink.href = `/viz.html?session=${SESSION_ID}`;
+
+// ── API keys — автосохранение ─────────────────
+const showKeysSaved = () => {
+  const el = $("keys-saved");
+  el.style.opacity = 1;
+  setTimeout(() => { el.style.opacity = 0; }, 2000);
+};
+
+["openai-key", "groq-key", "gemini-key"].forEach(id => {
+  const el = $(id); if (!el) return;
+  const saved = localStorage.getItem(id);
+  if (saved) el.value = saved;
+  el.addEventListener("input", e => {
+    localStorage.setItem(id, e.target.value.trim());
+    showKeysSaved();
+  });
+});
+
+// ── Narrative engine selector ─────────────────
+const savedEngine = localStorage.getItem("narrative-engine") || "gpt";
+const engineRadio = document.querySelector(`input[name="narrative-engine"][value="${savedEngine}"]`);
+if (engineRadio) engineRadio.checked = true;
+$("gemini-row").style.display = savedEngine === "gemini" ? "flex" : "none";
+
+document.querySelectorAll('input[name="narrative-engine"]').forEach(radio => {
+  radio.addEventListener("change", e => {
+    localStorage.setItem("narrative-engine", e.target.value);
+    $("gemini-row").style.display = e.target.value === "gemini" ? "flex" : "none";
+  });
+});
+
+const getEngine = () => document.querySelector('input[name="narrative-engine"]:checked')?.value || "gpt";
+
+// ── Supabase helpers ──────────────────────────
+const sbFetch = (path, opts = {}) => fetch(path, {
+  ...opts,
+  headers: { "Content-Type":"application/json", "Authorization":`Bearer ${SESSION_TOKEN}`, ...(opts.headers||{}) },
+});
+
+// ── Campaign settings ─────────────────────────
+let sessionSettings = {};
+
+const loadSessionSettings = async () => {
+  try {
+    const res = await sbFetch("/api/campaigns");
+    const campaigns = await res.json();
+    const campaign = Array.isArray(campaigns) ? campaigns.find(c => c.id === CAMPAIGN_ID) : null;
+    if (campaign?.settings) {
+      sessionSettings = campaign.settings;
+      if (sessionSettings.lang)  $("lang").value          = sessionSettings.lang;
+      if (sessionSettings.chunk) $("chunk-sec").value     = sessionSettings.chunk;
+      if (sessionSettings.vad)   $("vad-threshold").value = sessionSettings.vad;
+      const charCount = (sessionSettings.characters || []).filter(c => c.name).length;
+      $("settings-hint").textContent = charCount > 0
+        ? `✦ ${sessionSettings.worldName || "мир"} · ${charCount} персонажей`
+        : "Настройки кампании не заполнены — перейди в Настройки";
+        // Загружаем персонажей из таблицы characters
+      try {
+        const charsRes = await sbFetch(`/api/characters?campaign_id=${CAMPAIGN_ID}`);
+        const chars = await charsRes.json();
+        if (Array.isArray(chars) && chars.length > 0) {
+          sessionSettings.characters = chars.map(c => ({
+            name: c.name,
+            race: c.race,
+            appearance: c.appearance,
+            art: c.avatar_url,
+          }));
+          $("settings-hint").textContent = `✦ ${sessionSettings.worldName || "мир"} · ${chars.length} персонажей`;
+        }
+      } catch(e) { console.error("Characters load error:", e); }
+    } else {
+      $("settings-hint").textContent = "Настройки кампании не заполнены — перейди в Настройки";
+    }
+  } catch(e) {
+    $("settings-hint").textContent = "Не удалось загрузить настройки";
+  }
+};
+
+// ── World State ───────────────────────────────
+const worldState = {
+  currentLocation: "",
+  currentThreat: "",
+  activeNPCs: "",
+  prevSummary: "",
+  dmNotes: "",
+  recentEvents: [],
+};
+
+const loadWorldState = async () => {
+  try {
+    const res = await sbFetch(`/api/world-state?session_id=${SESSION_ID}`);
+    const data = await res.json();
+    if (data?.state) {
+      const s = data.state;
+      worldState.currentLocation = s.currentLocation || "";
+      worldState.currentThreat   = s.currentThreat   || "";
+      worldState.activeNPCs      = s.activeNPCs      || "";
+      worldState.prevSummary     = s.prevSummary     || "";
+      worldState.dmNotes         = s.dmNotes         || "";
+      worldState.recentEvents    = s.recentEvents    || [];
+      $("ws-location").value     = worldState.currentLocation;
+      $("ws-threat").value       = worldState.currentThreat;
+      $("ws-npcs").value         = worldState.activeNPCs;
+      $("ws-prev-summary").value = worldState.prevSummary;
+      $("ws-dm-notes").value     = worldState.dmNotes;
+      if (worldState.currentLocation) {
+        $("ws-location-auto").textContent = `↑ из прошлой сессии`;
+      }
+    }
+  } catch(e) { console.error("World state load error:", e); }
+
+  // Загружаем резюме прошлых сессий кампании
+  try {
+    const summRes = await sbFetch(`/api/summaries?campaign_id=${CAMPAIGN_ID}`);
+    if (Array.isArray(summRes) && summRes.length > 0) {
+      const allSummaries = summRes
+        .map(s => `=== ${s.sessions?.name || "Сессия"} ===\n${s.summary}`)
+        .join("\n\n");
+      worldState.prevSummary = allSummaries;
+      $("ws-prev-summary").value = allSummaries;
+    }
+  } catch(e) { console.error("Summaries load error:", e); }
+};
+
+const saveWorldState = async () => {
+  worldState.currentLocation = $("ws-location").value.trim();
+  worldState.currentThreat   = $("ws-threat").value.trim();
+  worldState.activeNPCs      = $("ws-npcs").value.trim();
+  worldState.prevSummary     = $("ws-prev-summary").value.trim();
+  worldState.dmNotes         = $("ws-dm-notes").value.trim();
+  try {
+    await sbFetch("/api/world-state", {
+      method: "POST",
+      body: JSON.stringify({ session_id: SESSION_ID, state: worldState }),
+    });
+  } catch(e) { console.error("World state save error:", e); }
+};
+
+const updateWorldStateFromEvent = async (event) => {
+  if (event.location && event.location_changed !== false) {
+    worldState.currentLocation = event.location;
+    $("ws-location").value = event.location;
+    $("ws-location-auto").textContent = `↑ обновлено автоматически`;
+  }
+  worldState.recentEvents.push({
+    type: event.type,
+    event: event.event,
+    location: event.location || worldState.currentLocation,
+  });
+  if (worldState.recentEvents.length > 10) worldState.recentEvents.shift();
+  if (worldState.recentEvents.length % 5 === 0) {
+    await saveWorldState();
+    log("World state сохранён", "ok");
+  }
+};
+
+$("btn-save-briefing").onclick = async () => {
+  await saveWorldState();
+  $("briefing-saved").textContent = "Сохранено ✓";
+  setTimeout(() => { $("briefing-saved").textContent = ""; }, 2500);
+};
+
+// ── Narrative context ─────────────────────────
+const getSessionContext = () => {
+  const s = sessionSettings;
+  const chars = (s.characters || []).filter(c => c.name).map(c =>
+    `- ${c.name} (${c.race||"unknown"}): ${c.appearance||"no description"}`
+  ).join("\n");
+  const recentEvents = worldState.recentEvents.slice(-6).map(e =>
+    `[${e.type}] ${e.event}${e.location ? ` (локация: ${e.location})` : ""}`
+  ).join("\n");
+  const charArts = (s.characters || []).filter(c => c.name && c.art).map(c => ({
+    name: c.name, art: c.art
+  }));
+  return {
+    world:           s.worldName    || "Unknown world",
+    worldDesc:       s.worldDesc    || "",
+    artStyle:        s.artStyle     || "fantasy illustration",
+    currentLocation: worldState.currentLocation || "unknown",
+    currentThreat:   worldState.currentThreat   || "",
+    activeNPCs:      worldState.activeNPCs       || "",
+    prevSummary:     worldState.prevSummary      || "",
+    dmNotes:         worldState.dmNotes          || "",
+    chars, recentEvents, charArts,
+  };
+};
+
+// ── Save transcript ───────────────────────────
+const saveTranscript = async (text, chunkNum) => {
+  if (!SESSION_ID || !SESSION_TOKEN) return;
+  try {
+    await sbFetch("/api/transcripts", {
+      method: "POST",
+      body: JSON.stringify({ session_id: SESSION_ID, chunk_num: chunkNum, text }),
+    });
+  } catch(e) { console.error("Transcript save error:", e); }
+};
+
+// ── Narrative LLM ─────────────────────────────
+let eventsCount = 0;
+
+const sendToClaude = async (transcriptText, chunkNum) => {
+  const engine    = getEngine();
+  const geminiKey = $("gemini-key").value.trim();
+  const openaiKey = $("openai-key").value.trim();
+
+  if (engine === "gemini" && !geminiKey) { log("Gemini ключ не введён","err"); return; }
+  if (engine === "gpt"    && !openaiKey) { log("OpenAI ключ не введён","err"); return; }
+
+  dot("claude","busy");
+  log(engine === "gemini" ? "Отправляю в Gemini..." : "Отправляю в GPT-4o...");
+
+  const ctx = getSessionContext();
+
+  const systemPrompt = `You are a D&D session visual narrator. Extract the key narrative event from a transcript and create a precise, consistent visual scene.
+
+=== WORLD ===
+Setting: ${ctx.world}
+Description: ${ctx.worldDesc}
+Art style: ${ctx.artStyle}
+
+=== CURRENT STATE ===
+Current location: ${ctx.currentLocation}
+Current threat: ${ctx.currentThreat || "none"}
+Active NPCs nearby: ${ctx.activeNPCs || "none"}
+DM notes: ${ctx.dmNotes || "none"}
+
+=== PARTY (always include relevant characters in image_prompt) ===
+${ctx.chars || "No characters defined"}
+
+=== PREVIOUS SESSION SUMMARY ===
+${ctx.prevSummary || "First session"}
+
+=== RECENT EVENTS (maintain continuity) ===
+${ctx.recentEvents || "Session just started"}
+
+=== RULES ===
+- Return ONLY valid JSON, no other text, no markdown
+- location: where the action happens — use current location if not explicitly changed
+- location_changed: true ONLY if party explicitly moved to a new place
+- generate_image: true for almost everything visual
+- generate_image: false ONLY for meta talk, rules questions, OOC chat
+- image_prompt: English, minimum 60 words, MUST include:
+  1. Exact location description matching current_location
+  2. Art style: "${ctx.artStyle}"
+  3. Atmosphere and lighting
+  4. All relevant party characters with their EXACT appearance from party list
+- DALL-E safe: no kill/blood/gore/weapon/war — use: dramatic confrontation, heroic stance, intense struggle
+- event must be in the same language as the transcript
+- Return null if transcript has no meaningful content`;
+
+  const userPrompt = `Transcript: "${transcriptText}"
+
+Return JSON:
+{
+  "event": "one sentence summary",
+  "type": "combat|dialogue|discovery|travel|magic|plot|other",
+  "characters": ["party members or NPCs mentioned"],
+  "location": "current location name",
+  "location_changed": false,
+  "importance": 1-3,
+  "generate_image": true/false,
+  "image_prompt": "detailed English scene, min 60 words"
+}
+Or null.`;
+
+  try {
+    let raw = "";
+
+    if (engine === "gemini") {
+      const res = await fetch("/api/gemini", {
+        method: "POST",
+        headers: { "Content-Type":"application/json", "x-gemini-key": geminiKey },
+        body: JSON.stringify({
+          model: "gemini-2.0-flash",
+          max_tokens: 800,
+          system: systemPrompt,
+          contents: [{ role:"user", parts:[{ text: userPrompt }] }],
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { log(`Gemini error: ${data.error?.message||JSON.stringify(data)}`,"err"); dot("claude","err"); return; }
+      raw = data.text || "";
+    } else {
+      const res = await fetch("/api/claude", {
+        method: "POST",
+        headers: { "Content-Type":"application/json", "x-openai-key": openaiKey },
+        body: JSON.stringify({
+          model: "gpt-4o",
+          max_tokens: 800,
+          messages: [
+            { role:"system", content: systemPrompt },
+            { role:"user",   content: userPrompt },
+          ],
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { log(`GPT error: ${data.error?.message||JSON.stringify(data)}`,"err"); dot("claude","err"); return; }
+      raw = (data.choices||[]).map(c=>c.message?.content||"").join("").trim();
+    }
+
+    if (raw === "null" || !raw) { log("Нарратив: нет значимых событий"); dot("claude","on"); return; }
+
+    const event = JSON.parse(raw.replace(/```json|```/g,"").trim());
+    if (!event?.event) { dot("claude","on"); return; }
+
+    await updateWorldStateFromEvent(event);
+
+    eventsCount++;
+    const tokenEst = (systemPrompt.length + userPrompt.length + raw.length) / 4;
+    const costEst = parseFloat($("s-cost-c").textContent.replace("$","")) + (tokenEst / 1000000 * 3);
+    $("s-cost-c").textContent = "$" + costEst.toFixed(4);
+    $("s-events").textContent = eventsCount;
+    $("events-count").textContent = `(${eventsCount})`;
+
+    addEventCard(event);
+    dot("claude","on");
+    log(`[${event.location||ctx.currentLocation}] ${event.event}`, "ok");
+
+    if (event.generate_image) {
+      try {
+        const bc = new BroadcastChannel("dnd-narrative");
+        bc.postMessage({ type:"event", event, charArts: getSessionContext().charArts, sessionId: SESSION_ID, token: SESSION_TOKEN });
+        bc.close();
+      } catch {}
+    }
+
+  } catch(e) {
+    log("Нарратив parse error: "+e.message,"err");
+    dot("claude","err");
+  }
+};
+
+const addEventCard = (event) => {
+  const list = $("events-list");
+  const noEvents = list.querySelector(".no-events");
+  if (noEvents) noEvents.remove();
+  const card = document.createElement("div");
+  card.className = "event-card" + (event.generate_image ? " has-image" : "");
+  card.innerHTML = `
+    <div class="event-top">
+      <span class="event-type ${event.type||"other"}">${(event.type||"other").toUpperCase()}</span>
+      <div style="display:flex;align-items:center;gap:.75rem;">
+        ${event.generate_image ? '<span class="img-badge">✦ IMAGE</span>' : ''}
+        <span class="event-time">${new Date().toLocaleTimeString("ru",{hour:"2-digit",minute:"2-digit"})}</span>
+      </div>
+    </div>
+    <div class="event-desc">${event.event}</div>
+    ${event.location ? `<div style="font-size:10px;color:#3a5a8a;margin-top:.3rem;">◉ ${event.location}</div>` : ""}
+    ${(event.characters||[]).length ? `<div class="event-chars">${event.characters.map(c=>`<span class="event-char">${c}</span>`).join("")}</div>` : ""}
+    ${event.generate_image && event.image_prompt ? `<div class="event-prompt">prompt: ${event.image_prompt}</div>` : ""}
+  `;
+  list.insertBefore(card, list.firstChild);
+};
+
+// ── Utils ─────────────────────────────────────
+const log = (msg, cls="inf") => {
+  const el = document.createElement("span"); el.className=cls;
+  el.textContent = `[${new Date().toLocaleTimeString("ru")}] ${msg}`;
+  $("log").appendChild(el); $("log").scrollTop=9999;
+};
+const dot = (id, state) => $("dot-"+id).className = "dot"+(state?" "+state:"");
+const setStat = (id, val) => $(id).textContent = val;
+
+// ── Record ────────────────────────────────────
+let recorder, audioCtx, timerInterval, seconds=0;
+let chunksProcessed=0, totalMinutes=0;
+let stopping=false, chunkCount=0;
+let currentAudioLevel = 0;
+
+const updateTimer = () => {
+  seconds++;
+  $("timer").textContent = String(Math.floor(seconds/60)).padStart(2,"0")+":"+String(seconds%60).padStart(2,"0");
+};
+
+const addTranscriptBlock = (text, chunkNum, pending=false) => {
+  const existing = document.getElementById("tc-"+chunkNum);
+  if (existing) {
+    const m = existing.querySelector(".chunk-meta");
+    const t = existing.querySelector(".chunk-pending")||existing.querySelector(".chunk-text");
+    if (m) m.textContent=`Чанк ${chunkNum}`;
+    if (t) { t.textContent=text; t.className="chunk-text"; }
+    return;
+  }
+  const emptyEl = document.querySelector(".empty"); if (emptyEl) emptyEl.remove();
+  const div = document.createElement("div"); div.className="chunk-block"; div.id="tc-"+chunkNum;
+  div.innerHTML = `<div class="chunk-meta">${pending?"⏳ Обрабатывается...":`Чанк ${chunkNum}`}</div><div class="${pending?"chunk-pending":"chunk-text"}">${text}</div>`;
+  $("transcript").appendChild(div); $("transcript").scrollTop=9999;
+};
+
+const sendToWhisper = async (blob, chunkNum) => {
+  const groqKey   = $("groq-key").value.trim();
+  const openaiKey = $("openai-key").value.trim();
+  if (!groqKey && !openaiKey) { log("Нужен Groq или OpenAI ключ для транскрипции","err"); return; }
+
+  dot("wh","busy");
+  addTranscriptBlock("Распознаю речь...", chunkNum, true);
+  log(`Чанк ${chunkNum} → ${groqKey ? "Groq" : "Whisper"} (${(blob.size/1024).toFixed(0)} KB)...`);
+
+  const form = new FormData();
+  form.append("file", new Blob([blob],{type:"audio/webm"}), `chunk-${chunkNum}.webm`);
+  const lang = $("lang").value.trim(); if (lang) form.append("language", lang);
+
+  const whisperUrl     = groqKey ? "/api/groq-whisper" : "/api/whisper";
+  const whisperHeaders = groqKey ? {"x-groq-key": groqKey} : {"x-openai-key": openaiKey};
+  form.append("model", groqKey ? "whisper-large-v3" : "whisper-1");
+
+  try {
+    const res = await fetch(whisperUrl, {method:"POST", headers: whisperHeaders, body:form});
+    const data = await res.json();
+    if (!res.ok) { log(`Whisper error: ${data.error?.message}`,"err"); addTranscriptBlock("[ошибка]",chunkNum); dot("wh","err"); return; }
+    const text = data.text?.trim()||"[тишина]";
+    addTranscriptBlock(text, chunkNum);
+    chunksProcessed++; totalMinutes += parseFloat($("chunk-sec").value||30)/60;
+    setStat("s-chunks",chunksProcessed); setStat("s-mins",totalMinutes.toFixed(1));
+    setStat("s-cost-w", groqKey ? "$0.000" : "$"+(totalMinutes*0.006).toFixed(3));
+    log(`Транскрипция ✓ чанк ${chunkNum}`, "ok");
+    dot("wh","on");
+    if (text !== "[тишина]" && text.length > 20) {
+      saveTranscript(text, chunkNum);
+      sendToClaude(text, chunkNum);
+    }
+  } catch(e) { log("Fetch error: "+e.message,"err"); dot("wh","err"); }
+};
+
+const setupMeter = (stream, fillId, valId) => {
+  const an=audioCtx.createAnalyser(); an.fftSize=256;
+  audioCtx.createMediaStreamSource(stream).connect(an);
+  const data=new Uint8Array(an.frequencyBinCount);
+  const fill=$(fillId), val=$(valId);
+  setInterval(() => {
+    if(audioCtx.state==="closed") return;
+    an.getByteFrequencyData(data);
+    const pct=Math.min(100,Math.round(data.reduce((a,b)=>a+b,0)/data.length*2.5));
+    fill.style.width=pct+"%";
+    fill.className="meter-fill"+(pct>80?" hot":pct>45?" mid":"");
+    val.textContent=pct+"%";
+    currentAudioLevel=Math.max(currentAudioLevel,pct);
+  }, 100);
+};
+
+$("btn-start").onclick = async () => {
+  await saveWorldState();
+  $("btn-start").disabled=true; stopping=false;
+  log("Запрашиваю вкладку...");
+  let tabStream;
+  try {
+    tabStream=await navigator.mediaDevices.getDisplayMedia({video:true,audio:{echoCancellation:false,noiseSuppression:false}});
+    dot("tab","on"); log("Вкладка ✓","ok");
+  } catch(e) { log("Ошибка: "+e.message,"err"); $("btn-start").disabled=false; return; }
+  if (!tabStream.getAudioTracks().length) log("Нет аудио — поставь галочку 'Share tab audio'!","err");
+  let micStream;
+  try { micStream=await navigator.mediaDevices.getUserMedia({audio:true}); dot("mic","on"); log("Микрофон ✓","ok"); }
+  catch(e) { log("Микрофон: "+e.message,"err"); }
+  audioCtx=new AudioContext();
+  const dest=audioCtx.createMediaStreamDestination();
+  if (tabStream.getAudioTracks().length) audioCtx.createMediaStreamSource(tabStream).connect(dest);
+  if (micStream) audioCtx.createMediaStreamSource(micStream).connect(dest);
+  if (micStream) setupMeter(micStream,"meter-mic","meter-mic-val");
+  if (tabStream.getAudioTracks().length) setupMeter(tabStream,"meter-tab","meter-tab-val");
+  const chunkMs=parseInt($("chunk-sec").value||30)*1000;
+
+  let vadSum=0, vadSamples=0;
+  setInterval(() => {
+    if(audioCtx.state==="closed") return;
+    vadSum+=currentAudioLevel; vadSamples++;
+    currentAudioLevel=0;
+  }, 200);
+
+  const startNewChunk=()=>{
+    vadSum=0; vadSamples=0;
+    const rec=new MediaRecorder(dest.stream,{mimeType:"audio/webm;codecs=opus"});
+    rec.ondataavailable=e=>{
+      if(e.data?.size>500){
+        const avgLevel = rec._vadAvg||0;
+        const threshold = parseFloat($("vad-threshold").value||10);
+        if (avgLevel < threshold) { log(`Чанк пропущен — тишина (уровень: ${avgLevel.toFixed(1)})`); return; }
+        chunkCount++;
+        log(`VAD ок (уровень: ${avgLevel.toFixed(1)}) — отправляю чанк ${chunkCount}`);
+        sendToWhisper(new Blob([e.data],{type:"audio/webm"}),chunkCount);
+      }
+    };
+    rec.start(); recorder=rec;
+    setTimeout(()=>{
+      if(rec.state!=="inactive"){
+        rec._vadAvg = vadSamples>0 ? vadSum/vadSamples : 0;
+        rec.stop();
+        if(recorder===rec&&!stopping) setTimeout(startNewChunk,50);
+      }
+    },chunkMs);
+  };
+
+  startNewChunk();
+  dot("rec","on"); log(`Запись началась. Чанк каждые ${$("chunk-sec").value||30} сек. Движок: ${getEngine().toUpperCase()}`,"ok");
+  seconds=0; timerInterval=setInterval(updateTimer,1000);
+  $("btn-stop").disabled=false;
+  tabStream.getAudioTracks().forEach(t=>t.onended=()=>{ log("Захват прерван","err"); stopAll(); });
+};
+
+const stopAll = async () => {
+  stopping=true;
+  if(recorder?.state!=="inactive") recorder?.stop();
+  audioCtx?.close();
+  clearInterval(timerInterval);
+  dot("tab",""); dot("mic",""); dot("rec","");
+  $("btn-stop").disabled=true; $("btn-start").disabled=false;
+  await saveWorldState();
+  log("Остановлено — world state сохранён");
+};
+$("btn-stop").onclick = stopAll;
+
+// ── Init ──────────────────────────────────────
+loadSessionSettings();
+loadWorldState();
+</script>
+</body>
+</html>
