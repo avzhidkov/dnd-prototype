@@ -146,7 +146,15 @@ button.primary:hover:not(:disabled) { background:var(--accent2); }
     </div>
     <div class="row"><span class="settings-hint" id="settings-hint">Загружаю настройки...</span></div>
   </div>
-
+    <!-- Jitsi звонок -->
+    <div class="box" id="jitsi-box">
+        <div class="box-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>ЗВОНОК</span>
+        <button id="jitsi-toggle" onclick="toggleJitsi()" style="font-size:10px;padding:.2rem .6rem;">Подключиться</button>
+        </div>
+        <div id="jitsi-container" style="display:none;width:100%;height:400px;border-radius:4px;overflow:hidden;"></div>
+        <div id="jitsi-status" style="font-size:11px;color:var(--dim);margin-top:.5rem;display:none;"></div>
+    </div>
   <!-- World State + Pre-session briefing -->
   <div class="box">
     <div class="box-title">СОСТОЯНИЕ МИРА ПЕРЕД СЕССИЕЙ</div>
@@ -769,6 +777,104 @@ $("btn-stop").onclick = stopAll;
 // ── Init ──────────────────────────────────────
 loadSessionSettings();
 loadWorldState();
+</script>
+<script>
+let jitsiApi = null;
+
+async function toggleJitsi() {
+  const btn = document.getElementById('jitsi-toggle');
+  const container = document.getElementById('jitsi-container');
+  const status = document.getElementById('jitsi-status');
+
+  if (jitsiApi) {
+    jitsiApi.dispose();
+    jitsiApi = null;
+    container.style.display = 'none';
+    status.style.display = 'none';
+    btn.textContent = 'Подключиться';
+    return;
+  }
+
+  btn.textContent = 'Подключение...';
+  btn.disabled = true;
+
+  try {
+    // Получаем JWT токен
+    const sbToken = localStorage.getItem('sb-token');
+    const campaignId = localStorage.getItem('active-campaign-id') || 'test';
+    const characterName = localStorage.getItem('active-campaign-name') || 'Участник';
+
+    const resp = await fetch('/api/jitsi-token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${sbToken}`
+      },
+      body: JSON.stringify({ room: campaignId, characterName })
+    });
+
+    const { token } = await resp.json();
+    if (!token) throw new Error('Не удалось получить токен');
+
+    // Загружаем Jitsi External API
+    await loadScript('https://room.dream-story.ru/external_api.js');
+
+    container.style.display = 'block';
+    status.style.display = 'block';
+    status.textContent = 'Подключаюсь...';
+
+    jitsiApi = new JitsiMeetExternalAPI('room.dream-story.ru', {
+      roomName: campaignId,
+      jwt: token,
+      parentNode: container,
+      width: '100%',
+      height: 400,
+      configOverwrite: {
+        startWithAudioMuted: false,
+        startWithVideoMuted: true,
+        toolbarButtons: ['microphone', 'hangup', 'tileview'],
+      },
+      interfaceConfigOverwrite: {
+        SHOW_JITSI_WATERMARK: false,
+        SHOW_BRAND_WATERMARK: false,
+        TOOLBAR_ALWAYS_VISIBLE: true,
+      },
+      userInfo: { displayName: characterName }
+    });
+
+    jitsiApi.on('videoConferenceJoined', () => {
+      status.textContent = '● В эфире';
+      status.style.color = 'var(--accent)';
+      btn.textContent = 'Отключиться';
+      btn.disabled = false;
+    });
+
+    jitsiApi.on('videoConferenceLeft', () => {
+      jitsiApi = null;
+      container.style.display = 'none';
+      status.style.display = 'none';
+      btn.textContent = 'Подключиться';
+      btn.disabled = false;
+    });
+
+  } catch(e) {
+    status.textContent = 'Ошибка: ' + e.message;
+    status.style.display = 'block';
+    btn.textContent = 'Подключиться';
+    btn.disabled = false;
+  }
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) return resolve();
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
 </script>
 </body>
 </html>
